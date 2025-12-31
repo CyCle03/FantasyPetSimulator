@@ -42,6 +42,9 @@ npm run dev
 - Enable with `NEXT_PUBLIC_USE_PART_ASSETS=true` when running the frontend.
 - When disabled, the app uses the SVG fallback avatar.
 
+## UI Language
+- Use the language dropdown in the header to switch between English and Korean.
+
 ## Market (Experimental)
 - Enable backend: `ENABLE_MARKET=true`
 - Enable frontend: `NEXT_PUBLIC_ENABLE_MARKET=true`
@@ -98,6 +101,9 @@ npm run dev
 - `frontend/public/parts/{Locus}/{Value}.png` 규칙으로 파츠 이미지 배치.
 - 프론트 실행 시 `NEXT_PUBLIC_USE_PART_ASSETS=true`를 설정하면 사용됨.
 - 비활성화 시 SVG 폴백 아바타 사용.
+
+## 언어 선택
+- 상단 언어 선택 드롭다운에서 영어/한국어를 전환할 수 있습니다.
 
 ## 마켓 (실험)
 - 백엔드 활성화: `ENABLE_MARKET=true`
