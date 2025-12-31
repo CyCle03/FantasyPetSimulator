@@ -38,6 +38,9 @@ export default function PetAvatar({
   const maskWidth = Math.round(size * 0.5);
   const maskHeight = Math.round(size * 0.18);
   const tier = pet.rarity_tier;
+  const ringSize = size < 120 ? 3 : 4;
+  const glowBlur = size < 120 ? 10 : 14;
+  const showMask = false;
   const badgeFont = size < 100 ? "text-[9px]" : "text-[10px]";
   const badgePad = size < 100 ? "px-1.5 py-0.5" : "px-2 py-0.5";
   const layers = useMemo(
@@ -56,7 +59,11 @@ export default function PetAvatar({
     >
       {tier !== "Common" ? (
         <div
-          className={`absolute inset-0 rounded-2xl ${getRarityGlowClass(tier)}`}
+          className="absolute inset-0 rounded-2xl"
+          style={{
+            boxShadow: getRarityGlowShadow(tier, glowBlur),
+            border: `${ringSize}px solid ${getRarityColor(tier)}`
+          }}
         />
       ) : null}
       {!USE_ASSETS || !hasLoadedAsset ? (
@@ -102,10 +109,15 @@ export default function PetAvatar({
             );
           })
         : null}
-      {USE_ASSETS ? (
+      {showMask ? (
         <div
-          className="absolute left-0 top-0 bg-white"
-          style={{ width: maskWidth, height: maskHeight }}
+          className="absolute left-0 top-0"
+          style={{
+            width: maskWidth,
+            height: maskHeight,
+            background:
+              "linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.2))"
+          }}
         />
       ) : null}
       {showBadge ? (
@@ -121,21 +133,6 @@ export default function PetAvatar({
   );
 }
 
-function getRarityGlowClass(tier: string) {
-  switch (tier) {
-    case "Uncommon":
-      return "ring-2 ring-moss/60";
-    case "Rare":
-      return "ring-2 ring-sky/70 shadow-[0_0_12px_rgba(37,99,235,0.35)]";
-    case "Epic":
-      return "ring-2 ring-ember/80 shadow-[0_0_16px_rgba(249,115,22,0.4)]";
-    case "Legendary":
-      return "ring-2 ring-black shadow-[0_0_18px_rgba(15,23,42,0.5)]";
-    default:
-      return "";
-  }
-}
-
 function getBadgeClass(tier: string) {
   switch (tier) {
     case "Uncommon":
@@ -149,4 +146,24 @@ function getBadgeClass(tier: string) {
     default:
       return "bg-pearl text-ink";
   }
+}
+
+function getRarityColor(tier: string) {
+  switch (tier) {
+    case "Uncommon":
+      return "#2f855a";
+    case "Rare":
+      return "#2563eb";
+    case "Epic":
+      return "#f97316";
+    case "Legendary":
+      return "#0f172a";
+    default:
+      return "#e2e8f0";
+  }
+}
+
+function getRarityGlowShadow(tier: string, blur: number) {
+  const color = getRarityColor(tier);
+  return `0 0 ${blur}px ${color}88, 0 0 ${Math.round(blur * 1.5)}px ${color}55`;
 }

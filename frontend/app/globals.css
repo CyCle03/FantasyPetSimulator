@@ -44,3 +44,19 @@ body {
   background-size: 300% 300%;
   animation: shimmer 2s ease infinite;
 }
+
+@keyframes float-slow {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(12px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.float-slow {
+  animation: float-slow 12s ease-in-out infinite;
+}

@@ -31,7 +31,7 @@ export default function EggCard({
   const hatched = egg.status !== "Incubating";
 
   return (
-    <div className="rounded-2xl border-2 border-amber-300 bg-white/80 p-4 shadow-sm">
+    <div className="rounded-2xl border-2 border-amber-300 bg-white/80 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
       <div className="flex items-start justify-between">
         <div>
           <h3 className="text-lg font-semibold">Egg #{egg.id}</h3>

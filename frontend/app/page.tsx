@@ -42,6 +42,7 @@ export default function Home() {
   const [listingPetId, setListingPetId] = useState<number | null>(null);
   const [listingPrice, setListingPrice] = useState("");
   const prevPetIds = useRef<Set<number>>(new Set());
+  const hasInitializedPets = useRef(false);
   const marketEnabled = process.env.NEXT_PUBLIC_ENABLE_MARKET === "true";
 
   const copy = {
@@ -226,6 +227,11 @@ export default function Home() {
 
   useEffect(() => {
     if (pets.length === 0) return;
+    if (!hasInitializedPets.current) {
+      prevPetIds.current = new Set(pets.map((pet) => pet.id));
+      hasInitializedPets.current = true;
+      return;
+    }
     const rareTiers = new Set(["Rare", "Epic", "Legendary"]);
     const newPet = pets.find(
       (pet) => !prevPetIds.current.has(pet.id) && rareTiers.has(pet.rarity_tier)
@@ -406,7 +412,9 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#fff5e6,_#f8f3e6_60%,_#f1e6d2_100%)] px-6 py-10">
+    <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_#fff5e6,_#f8f3e6_60%,_#f1e6d2_100%)] px-6 py-10">
+      <div className="pointer-events-none absolute -top-20 right-10 h-72 w-72 rounded-full bg-[radial-gradient(circle,_rgba(251,191,36,0.35),_transparent_60%)] blur-2xl float-slow" />
+      <div className="pointer-events-none absolute bottom-0 left-0 h-80 w-80 rounded-full bg-[radial-gradient(circle,_rgba(147,197,253,0.35),_transparent_60%)] blur-2xl float-slow" />
       {activePet ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6">
           <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
@@ -715,6 +723,21 @@ function assetPath(locus: string, value: string) {
   return `/parts/${locus}/${value}.png`;
 }
 
+function tierStyles(tier: string) {
+  switch (tier) {
+    case "Uncommon":
+      return { ring: "#2f855a", glow: "rgba(47,133,90,0.35)" };
+    case "Rare":
+      return { ring: "#2563eb", glow: "rgba(37,99,235,0.35)" };
+    case "Epic":
+      return { ring: "#f97316", glow: "rgba(249,115,22,0.4)" };
+    case "Legendary":
+      return { ring: "#0f172a", glow: "rgba(15,23,42,0.5)" };
+    default:
+      return { ring: "#e2e8f0", glow: "rgba(0,0,0,0)" };
+  }
+}
+
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -732,6 +755,8 @@ async function composePetImage(pet: Pet, size: number): Promise<string> {
   if (!context) return "";
 
   const shown = pet.phenotype_public ?? pet.phenotype;
+  const tier = pet.rarity_tier;
+  const style = tierStyles(tier);
   if (USE_ASSETS) {
     for (const locus of LAYERS) {
       const value = shown[locus];
@@ -762,6 +787,41 @@ async function composePetImage(pet: Pet, size: number): Promise<string> {
     context.stroke();
   }
 
+  if (tier !== "Common") {
+    context.save();
+    context.strokeStyle = style.ring;
+    context.lineWidth = Math.max(2, Math.round(size * 0.04));
+    context.shadowColor = style.glow;
+    context.shadowBlur = Math.round(size * 0.08);
+    context.beginPath();
+    context.arc(size / 2, size / 2, size * 0.42, 0, Math.PI * 2);
+    context.stroke();
+    context.restore();
+  }
+
+  context.save();
+  context.font = `${Math.round(size * 0.08)}px \"DM Sans\", sans-serif`;
+  context.textAlign = "right";
+  context.textBaseline = "top";
+  const badgePadding = Math.round(size * 0.03);
+  const badgeText = tier;
+  const metrics = context.measureText(badgeText);
+  const badgeWidth = metrics.width + badgePadding * 2;
+  const badgeHeight = Math.round(size * 0.12);
+  context.fillStyle = style.ring;
+  drawRoundedRect(
+    context,
+    size - badgeWidth - badgePadding,
+    badgePadding,
+    badgeWidth,
+    badgeHeight,
+    badgeHeight / 2
+  );
+  context.fill();
+  context.fillStyle = "#ffffff";
+  context.fillText(badgeText, size - badgePadding * 1.5, badgePadding + badgeHeight * 0.18);
+  context.restore();
+
   return canvas.toDataURL("image/png");
 }
 
@@ -782,4 +842,26 @@ function downloadJson(payload: unknown, filename: string) {
   link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
+}
+
+function drawRoundedRect(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  radius: number
+) {
+  const r = Math.min(radius, width / 2, height / 2);
+  context.beginPath();
+  context.moveTo(x + r, y);
+  context.lineTo(x + width - r, y);
+  context.quadraticCurveTo(x + width, y, x + width, y + r);
+  context.lineTo(x + width, y + height - r);
+  context.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+  context.lineTo(x + r, y + height);
+  context.quadraticCurveTo(x, y + height, x, y + height - r);
+  context.lineTo(x, y + r);
+  context.quadraticCurveTo(x, y, x + r, y);
+  context.closePath();
 }
