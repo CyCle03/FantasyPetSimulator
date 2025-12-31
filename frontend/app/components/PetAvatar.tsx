@@ -26,6 +26,7 @@ function assetPath(locus: string, value: string) {
 export default function PetAvatar({ pet }: { pet: Pet }) {
   const shown = pet.phenotype_public ?? pet.phenotype;
   const [failed, setFailed] = useState<Set<string>>(new Set());
+  const [hasLoadedAsset, setHasLoadedAsset] = useState(false);
   const layers = useMemo(
     () =>
       LAYERS.map((locus) => ({
@@ -37,7 +38,7 @@ export default function PetAvatar({ pet }: { pet: Pet }) {
 
   return (
     <div className="relative h-20 w-20 overflow-hidden rounded-2xl border border-ink/10 bg-white">
-      {!USE_ASSETS ? (
+      {!USE_ASSETS || !hasLoadedAsset ? (
         <svg width="80" height="80" viewBox="0 0 80 80" aria-hidden>
           <defs>
             <linearGradient id={`grad-${pet.id}`} x1="0" y1="0" x2="1" y2="1">
@@ -68,6 +69,7 @@ export default function PetAvatar({ pet }: { pet: Pet }) {
                 src={src}
                 alt=""
                 className="absolute inset-0 h-full w-full object-contain"
+                onLoad={() => setHasLoadedAsset(true)}
                 onError={() =>
                   setFailed((prev) => {
                     const next = new Set(prev);
