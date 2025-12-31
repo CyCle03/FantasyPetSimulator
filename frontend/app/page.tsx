@@ -36,6 +36,8 @@ export default function Home() {
   const [rareReveal, setRareReveal] = useState<Pet | null>(null);
   const [activePet, setActivePet] = useState<Pet | null>(null);
   const [gold, setGold] = useState(0);
+  const [visiblePets, setVisiblePets] = useState(8);
+  const [visibleHatched, setVisibleHatched] = useState(6);
   const [listings, setListings] = useState<Listing[]>([]);
   const [listingPetId, setListingPetId] = useState<number | null>(null);
   const [listingPrice, setListingPrice] = useState("");
@@ -113,6 +115,11 @@ export default function Home() {
         refresh: "Refresh",
         instant: "Hatch now",
         cost: "Cost"
+      },
+      ui: {
+        showMore: "Show more",
+        total: "total",
+        rareHatch: "Rare Hatch"
       }
     },
     ko: {
@@ -184,6 +191,11 @@ export default function Home() {
         refresh: "리롤",
         instant: "지금 부화",
         cost: "가격"
+      },
+      ui: {
+        showMore: "더 보기",
+        total: "총",
+        rareHatch: "희귀 부화"
       }
     }
   } as const;
@@ -222,10 +234,14 @@ export default function Home() {
     if (newPet) {
       setRareReveal(newPet);
       playRareSound();
-      const timer = setTimeout(() => setRareReveal(null), 2400);
-      return () => clearTimeout(timer);
     }
   }, [pets]);
+
+  useEffect(() => {
+    if (!rareReveal) return;
+    const timer = setTimeout(() => setRareReveal(null), 2400);
+    return () => clearTimeout(timer);
+  }, [rareReveal]);
 
   const selectedPets = useMemo(
     () => pets.filter((pet) => selected.includes(pet.id)),
@@ -238,6 +254,11 @@ export default function Home() {
   const hatchedEggs = useMemo(
     () => eggs.filter((egg) => egg.status !== "Incubating"),
     [eggs]
+  );
+  const petsToShow = useMemo(() => pets.slice(0, visiblePets), [pets, visiblePets]);
+  const hatchedToShow = useMemo(
+    () => hatchedEggs.slice(0, visibleHatched),
+    [hatchedEggs, visibleHatched]
   );
 
   const toggleSelect = (id: number) => {
@@ -431,7 +452,15 @@ export default function Home() {
       {rareReveal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6">
           <div className="rare-reveal rare-shimmer w-full max-w-md rounded-3xl p-6 text-center text-white shadow-2xl">
-            <p className="text-xs uppercase tracking-[0.3em]">Rare Hatch</p>
+            <div className="flex items-center justify-between">
+              <span className="text-xs uppercase tracking-[0.3em]">{text.ui.rareHatch}</span>
+              <button
+                className="rounded-full border border-white/60 px-3 py-1 text-xs font-semibold"
+                onClick={() => setRareReveal(null)}
+              >
+                ✕
+              </button>
+            </div>
             <h2 className="mt-2 text-3xl font-semibold">
               {(rareReveal.phenotype_public ?? rareReveal.phenotype).Species} {rareReveal.rarity_tier}
             </h2>
@@ -476,9 +505,14 @@ export default function Home() {
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[2fr_1fr]">
           <div className="space-y-6">
-            <h2 className="text-2xl font-semibold">{text.myPets}</h2>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-2xl font-semibold">{text.myPets}</h2>
+              <span className="text-xs text-ink/60">
+                {text.ui.total} {pets.length}
+              </span>
+            </div>
             <div className="grid gap-4 md:grid-cols-2">
-              {pets.map((pet) => (
+              {petsToShow.map((pet) => (
                 <PetCard
                   key={pet.id}
                   pet={pet}
@@ -490,6 +524,14 @@ export default function Home() {
                 />
               ))}
             </div>
+            {pets.length > visiblePets ? (
+              <button
+                className="rounded-full border border-ink/20 bg-white px-4 py-2 text-sm font-semibold text-ink hover:bg-ink/10"
+                onClick={() => setVisiblePets((count) => count + 8)}
+              >
+                {text.ui.showMore}
+              </button>
+            ) : null}
           </div>
 
           <div className="space-y-6">
@@ -573,7 +615,7 @@ export default function Home() {
                 {lang === "ko" ? "부화 완료 알이 없습니다." : "No hatched eggs yet."}
               </p>
             ) : (
-              hatchedEggs.map((egg) => (
+              hatchedToShow.map((egg) => (
                 <EggCard
                   key={egg.id}
                   egg={egg}
@@ -584,6 +626,14 @@ export default function Home() {
               ))
             )}
           </div>
+          {hatchedEggs.length > visibleHatched ? (
+            <button
+              className="mt-4 rounded-full border border-ink/20 bg-white px-4 py-2 text-sm font-semibold text-ink hover:bg-ink/10"
+              onClick={() => setVisibleHatched((count) => count + 6)}
+            >
+              {text.ui.showMore}
+            </button>
+          ) : null}
         </section>
 
         <section className="mt-10">
