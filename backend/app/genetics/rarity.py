@@ -35,3 +35,14 @@ def rarity_tier(score: int) -> str:
     if score >= 5:
         return "Uncommon"
     return "Common"
+
+
+def hatch_reward(score: int, tier: str) -> int:
+    bonus = {
+        "Common": 0,
+        "Uncommon": 2,
+        "Rare": 4,
+        "Epic": 8,
+        "Legendary": 15,
+    }.get(tier, 0)
+    return 5 + (score // 5) + bonus

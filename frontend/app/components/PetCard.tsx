@@ -22,7 +22,8 @@ export default function PetCard({
   selected,
   onSelect,
   now,
-  labels
+  labels,
+  onView
 }: {
   pet: Pet;
   selected: boolean;
@@ -35,7 +36,11 @@ export default function PetCard({
     emotion: string;
     breeding: string;
     ready: string;
+    view: string;
+    select: string;
+    selected: string;
   };
+  onView: (pet: Pet) => void;
 }) {
   const shown = pet.phenotype_public ?? pet.phenotype;
   const accent = RARITY_STYLES[pet.rarity_tier] || RARITY_STYLES.Common;
@@ -57,7 +62,14 @@ export default function PetCard({
       </div>
 
       <div className="mt-3 flex items-center gap-3">
-        <PetAvatar pet={pet} />
+        <button
+          type="button"
+          onClick={() => onView(pet)}
+          className="rounded-2xl focus:outline-none focus:ring-2 focus:ring-amber-300"
+          aria-label={labels.view}
+        >
+          <PetAvatar pet={pet} />
+        </button>
         <div className="text-sm text-ink/80">
           <p>{labels.body}: {shown.BodyType}</p>
           <p>{labels.pattern}: {shown.Pattern}</p>
@@ -67,16 +79,24 @@ export default function PetCard({
         </div>
       </div>
 
-      <button
-        className={`mt-4 w-full rounded-full border px-3 py-2 text-sm font-semibold transition ${
-          selected
-            ? "border-ink bg-ink text-white"
-            : "border-ink/30 bg-white text-ink hover:bg-ink/10"
-        }`}
-        onClick={() => onSelect(pet.id)}
-      >
-        {selected ? "Selected" : "Select"}
-      </button>
+      <div className="mt-4 flex gap-2">
+        <button
+          className="w-1/3 rounded-full border border-ink/30 bg-white px-3 py-2 text-sm font-semibold text-ink transition hover:bg-ink/10"
+          onClick={() => onView(pet)}
+        >
+          {labels.view}
+        </button>
+        <button
+          className={`w-2/3 rounded-full border px-3 py-2 text-sm font-semibold transition ${
+            selected
+              ? "border-ink bg-ink text-white"
+              : "border-ink/30 bg-white text-ink hover:bg-ink/10"
+          }`}
+          onClick={() => onSelect(pet.id)}
+        >
+          {selected ? labels.selected : labels.select}
+        </button>
+      </div>
     </div>
   );
 }

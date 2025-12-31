@@ -24,6 +24,7 @@ export type State = {
   pets: Pet[];
   eggs: Egg[];
   server_time: string;
+  gold: number;
 };
 
 export type Listing = {
@@ -99,5 +100,19 @@ export function cancelListing(listingId: number) {
   return request<Listing>("/market/cancel", {
     method: "POST",
     body: JSON.stringify({ listingId })
+  });
+}
+
+export function refreshEmotion(petId: number) {
+  return request<{ ok: boolean; gold: number }>("/shop/refresh-emotion", {
+    method: "POST",
+    body: JSON.stringify({ petId })
+  });
+}
+
+export function instantHatch(eggId: number) {
+  return request<{ ok: boolean; gold: number }>("/shop/instant-hatch", {
+    method: "POST",
+    body: JSON.stringify({ eggId })
   });
 }

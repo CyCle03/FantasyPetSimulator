@@ -10,8 +10,8 @@ from ..database import get_db
 from ..genetics.emotions import pick_emotion
 from ..genetics.genome import choose_hidden_loci
 from ..genetics.phenotype import genome_to_phenotype
-from ..genetics.rarity import rarity_score, rarity_tier
-from ..models import Egg, Pet
+from ..genetics.rarity import hatch_reward, rarity_score, rarity_tier
+from ..models import Egg, Pet, Player
 from ..schemas import EggOut, HatchIn
 
 router = APIRouter()
@@ -39,6 +39,16 @@ def _create_pet_from_genome(db: Session, genome: dict) -> Pet:
     return pet
 
 
+def _get_player(db: Session) -> Player:
+    player = db.query(Player).first()
+    if not player:
+        player = Player(gold=0)
+        db.add(player)
+        db.commit()
+        db.refresh(player)
+    return player
+
+
 @router.post("/hatch", response_model=EggOut)
 def hatch_egg(payload: HatchIn, db: Session = Depends(get_db)):
     egg = db.query(Egg).filter(Egg.id == payload.egg_id).first()
@@ -52,6 +62,9 @@ def hatch_egg(payload: HatchIn, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Egg is not ready yet.")
 
     pet = _create_pet_from_genome(db, egg.genome_json)
+    player = _get_player(db)
+    reward = hatch_reward(pet.rarity_score, pet.rarity_tier)
+    player.gold += reward
     egg.status = "Hatched"
     egg.hatched_pet_id = pet.id
     db.commit()

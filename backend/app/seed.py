@@ -10,12 +10,15 @@ from .genetics.genome import choose_hidden_loci
 from .genetics.genome import random_genome
 from .genetics.phenotype import genome_to_phenotype
 from .genetics.rarity import rarity_score, rarity_tier
-from .models import Pet
+from .models import Pet, Player
 
 
 def seed_db(db: Session) -> None:
     if db.query(Pet).count() > 0:
         return
+
+    if db.query(Player).count() == 0:
+        db.add(Player(gold=20))
 
     rng = random.Random()
     for _ in range(2):

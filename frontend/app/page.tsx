@@ -5,7 +5,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import BreedPanel from "./components/BreedPanel";
 import EggCard from "./components/EggCard";
 import MarketPanel from "./components/MarketPanel";
+import PetAvatar from "./components/PetAvatar";
 import PetCard from "./components/PetCard";
+import ShopPanel from "./components/ShopPanel";
 import {
   breed,
   buyListing,
@@ -14,6 +16,8 @@ import {
   getListings,
   getState,
   hatch,
+  instantHatch,
+  refreshEmotion,
   reset,
   type Egg,
   type Listing,
@@ -30,6 +34,8 @@ export default function Home() {
   const [now, setNow] = useState(Date.now());
   const [timeOffsetMs, setTimeOffsetMs] = useState(0);
   const [rareReveal, setRareReveal] = useState<Pet | null>(null);
+  const [activePet, setActivePet] = useState<Pet | null>(null);
+  const [gold, setGold] = useState(0);
   const [listings, setListings] = useState<Listing[]>([]);
   const [listingPetId, setListingPetId] = useState<number | null>(null);
   const [listingPrice, setListingPrice] = useState("");
@@ -63,7 +69,10 @@ export default function Home() {
         aura: "Aura",
         emotion: "Emotion",
         breeding: "Breeding",
-        ready: "Ready"
+        ready: "Ready",
+        view: "View",
+        select: "Select",
+        selected: "Selected"
       },
       eggCard: {
         ready: "Ready",
@@ -87,6 +96,23 @@ export default function Home() {
         buy: "Buy",
         cancel: "Cancel",
         empty: "No active listings."
+      },
+      petModal: {
+        title: "Pet Preview",
+        close: "Close",
+        downloadImage: "Download PNG",
+        downloadBundle: "Download JSON + Image"
+      },
+      shop: {
+        title: "Pet Shop",
+        gold: "Gold",
+        emotion: "Refresh Emotion",
+        hatch: "Instant Hatch",
+        selectPet: "Choose pet",
+        selectEgg: "Choose egg",
+        refresh: "Refresh",
+        instant: "Hatch now",
+        cost: "Cost"
       }
     },
     ko: {
@@ -114,7 +140,10 @@ export default function Home() {
         aura: "오라",
         emotion: "감정",
         breeding: "교배",
-        ready: "가능"
+        ready: "가능",
+        view: "보기",
+        select: "선택",
+        selected: "선택됨"
       },
       eggCard: {
         ready: "준비됨",
@@ -138,6 +167,23 @@ export default function Home() {
         buy: "구매",
         cancel: "취소",
         empty: "활성화된 등록이 없습니다."
+      },
+      petModal: {
+        title: "펫 미리보기",
+        close: "닫기",
+        downloadImage: "PNG 다운로드",
+        downloadBundle: "JSON + 이미지 다운로드"
+      },
+      shop: {
+        title: "펫 상점",
+        gold: "골드",
+        emotion: "감정 리롤",
+        hatch: "즉시 부화",
+        selectPet: "펫 선택",
+        selectEgg: "알 선택",
+        refresh: "리롤",
+        instant: "지금 부화",
+        cost: "가격"
       }
     }
   } as const;
@@ -150,6 +196,7 @@ export default function Home() {
     setEggs(state.eggs);
     const serverTime = new Date(state.server_time).getTime();
     setTimeOffsetMs(serverTime - Date.now());
+    setGold(state.gold ?? 0);
     if (marketEnabled) {
       const market = await getListings();
       setListings(market);
@@ -294,8 +341,93 @@ export default function Home() {
     }
   };
 
+  const handleRefreshEmotion = async (petId: number) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await refreshEmotion(petId);
+      await refresh();
+    } catch (err: any) {
+      setError(err.message || "Failed to refresh emotion.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleInstantHatch = async (eggId: number) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await instantHatch(eggId);
+      await refresh();
+    } catch (err: any) {
+      setError(err.message || "Failed to hatch instantly.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleDownloadImage = async () => {
+    if (!activePet) return;
+    const dataUrl = await composePetImage(activePet, 512);
+    downloadDataUrl(dataUrl, `pet-${activePet.id}.png`);
+  };
+
+  const handleDownloadBundle = async () => {
+    if (!activePet) return;
+    const dataUrl = await composePetImage(activePet, 512);
+    const payload = {
+      pet: activePet,
+      image: dataUrl,
+      generated_at: new Date().toISOString()
+    };
+    downloadJson(payload, `pet-${activePet.id}.json`);
+  };
+
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_#fff5e6,_#f8f3e6_60%,_#f1e6d2_100%)] px-6 py-10">
+      {activePet ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6">
+          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold">{text.petModal.title}</h2>
+              <button
+                className="rounded-full border border-ink/20 px-3 py-1 text-xs font-semibold text-ink"
+                onClick={() => setActivePet(null)}
+              >
+                {text.petModal.close}
+              </button>
+            </div>
+            <div className="mt-4 flex flex-col items-center gap-4 text-sm text-ink/80">
+              <div className="rounded-3xl border border-ink/10 bg-parchment p-4">
+                <PetAvatar pet={activePet} size={220} />
+              </div>
+              <div className="w-full rounded-2xl border border-ink/10 bg-white/80 p-4">
+                <p className="font-semibold">Pet #{activePet.id}</p>
+                <p>Species: {(activePet.phenotype_public ?? activePet.phenotype).Species}</p>
+                <p>Element: {(activePet.phenotype_public ?? activePet.phenotype).Element}</p>
+                <p>Personality: {(activePet.phenotype_public ?? activePet.phenotype).Personality}</p>
+                <p>Emotion: {activePet.emotion ?? "Calm"}</p>
+                <p>Rarity: {activePet.rarity_tier}</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  className="rounded-full border border-ink/20 bg-white px-4 py-2 text-sm font-semibold text-ink hover:bg-ink/10"
+                  onClick={handleDownloadImage}
+                >
+                  {text.petModal.downloadImage}
+                </button>
+                <button
+                  className="rounded-full border border-ink/20 bg-white px-4 py-2 text-sm font-semibold text-ink hover:bg-ink/10"
+                  onClick={handleDownloadBundle}
+                >
+                  {text.petModal.downloadBundle}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
       {rareReveal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6">
           <div className="rare-reveal rare-shimmer w-full max-w-md rounded-3xl p-6 text-center text-white shadow-2xl">
@@ -322,6 +454,9 @@ export default function Home() {
             <p className="mt-2 max-w-2xl text-sm text-ink/70">{text.subtitle}</p>
           </div>
           <div className="flex items-center gap-3">
+            <span className="rounded-full bg-amber-200 px-3 py-1 text-xs text-ink">
+              {text.shop.gold}: {gold}
+            </span>
             <select
               className="rounded-full border border-ink/20 bg-white px-3 py-2 text-sm"
               value={lang}
@@ -351,6 +486,7 @@ export default function Home() {
                   onSelect={toggleSelect}
                   now={now}
                   labels={text.petCard}
+                  onView={setActivePet}
                 />
               ))}
             </div>
@@ -387,6 +523,19 @@ export default function Home() {
                 )}
               </div>
             </section>
+
+            <ShopPanel
+              pets={pets}
+              eggs={eggs}
+              gold={gold}
+              emotionPrice={10}
+              hatchPrice={15}
+              onRefreshEmotion={handleRefreshEmotion}
+              onInstantHatch={handleInstantHatch}
+              busy={busy}
+              error={error}
+              labels={text.shop}
+            />
           </div>
         </section>
 
@@ -493,4 +642,94 @@ function playRareSound() {
   } catch {
     // Audio may be blocked by browser gesture policies.
   }
+}
+
+const LAYERS = [
+  "BodyType",
+  "BaseColor",
+  "Pattern",
+  "EyeShape",
+  "EyeColor",
+  "Mouth",
+  "Horn",
+  "Wing",
+  "Tail",
+  "Accessory",
+  "Aura",
+  "Element"
+];
+
+const USE_ASSETS = process.env.NEXT_PUBLIC_USE_PART_ASSETS === "true";
+
+function assetPath(locus: string, value: string) {
+  return `/parts/${locus}/${value}.png`;
+}
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error(`Failed to load ${src}`));
+    img.src = src;
+  });
+}
+
+async function composePetImage(pet: Pet, size: number): Promise<string> {
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const context = canvas.getContext("2d");
+  if (!context) return "";
+
+  const shown = pet.phenotype_public ?? pet.phenotype;
+  if (USE_ASSETS) {
+    for (const locus of LAYERS) {
+      const value = shown[locus];
+      if (!value || value === "Unknown") continue;
+      const src = assetPath(locus, value);
+      try {
+        const img = await loadImage(src);
+        context.drawImage(img, 0, 0, size, size);
+      } catch {
+        continue;
+      }
+    }
+  } else {
+    context.fillStyle = "#e2e8f0";
+    context.beginPath();
+    context.arc(size / 2, size / 2, size * 0.375, 0, Math.PI * 2);
+    context.fill();
+    context.fillStyle = "#0f172a";
+    context.beginPath();
+    context.arc(size * 0.375, size * 0.45, size * 0.05, 0, Math.PI * 2);
+    context.arc(size * 0.625, size * 0.45, size * 0.05, 0, Math.PI * 2);
+    context.fill();
+    context.strokeStyle = "#1f2937";
+    context.lineWidth = size * 0.04;
+    context.beginPath();
+    context.moveTo(size * 0.35, size * 0.65);
+    context.quadraticCurveTo(size * 0.5, size * 0.72, size * 0.65, size * 0.65);
+    context.stroke();
+  }
+
+  return canvas.toDataURL("image/png");
+}
+
+function downloadDataUrl(dataUrl: string, filename: string) {
+  const link = document.createElement("a");
+  link.href = dataUrl;
+  link.download = filename;
+  link.click();
+}
+
+function downloadJson(payload: unknown, filename: string) {
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {
+    type: "application/json"
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
 }

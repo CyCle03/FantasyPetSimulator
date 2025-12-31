@@ -11,12 +11,22 @@ from ..database import get_db, init_db
 from ..genetics.emotions import pick_emotion, should_update_emotion
 from ..genetics.genome import choose_hidden_loci
 from ..genetics.phenotype import genome_to_phenotype
-from ..genetics.rarity import rarity_score, rarity_tier
-from ..models import Egg, Pet
+from ..genetics.rarity import hatch_reward, rarity_score, rarity_tier
+from ..models import Egg, Pet, Player
 from ..schemas import EggOut, PetOut, ResetOut, StateOut
 from ..seed import seed_db
 
 router = APIRouter()
+
+
+def _get_player(db: Session) -> Player:
+    player = db.query(Player).first()
+    if not player:
+        player = Player(gold=0)
+        db.add(player)
+        db.commit()
+        db.refresh(player)
+    return player
 
 
 def _create_pet_from_genome(db: Session, genome: dict) -> Pet:
@@ -45,6 +55,7 @@ def _create_pet_from_genome(db: Session, genome: dict) -> Pet:
 def get_state(db: Session = Depends(get_db)):
     now = datetime.utcnow()
     rng = random.Random()
+    player = _get_player(db)
     eggs_ready = (
         db.query(Egg)
         .filter(Egg.status == "Incubating", Egg.hatch_at <= now)
@@ -53,6 +64,8 @@ def get_state(db: Session = Depends(get_db)):
 
     for egg in eggs_ready:
         pet = _create_pet_from_genome(db, egg.genome_json)
+        reward = hatch_reward(pet.rarity_score, pet.rarity_tier)
+        player.gold += reward
         egg.status = "Hatched"
         egg.hatched_pet_id = pet.id
 
@@ -101,6 +114,7 @@ def get_state(db: Session = Depends(get_db)):
             for egg in eggs
         ],
         server_time=now,
+        gold=player.gold,
     )
 
 
@@ -112,6 +126,7 @@ def reset_db(db: Session = Depends(get_db)):
 
     db.query(Egg).delete()
     db.query(Pet).delete()
+    db.query(Player).delete()
     db.commit()
 
     init_db()

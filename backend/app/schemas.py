@@ -42,6 +42,7 @@ class StateOut(BaseModel):
     pets: list[PetOut]
     eggs: list[EggOut]
     server_time: datetime
+    gold: int
 
 
 class BreedIn(BaseModel):
@@ -81,3 +82,16 @@ class ListingBuyIn(BaseModel):
 
 class ListingCancelIn(BaseModel):
     listing_id: int = Field(alias="listingId")
+
+
+class ShopEmotionIn(BaseModel):
+    pet_id: int = Field(alias="petId")
+
+
+class ShopHatchIn(BaseModel):
+    egg_id: int = Field(alias="eggId")
+
+
+class ShopResultOut(BaseModel):
+    ok: bool
+    gold: int

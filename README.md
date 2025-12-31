@@ -36,6 +36,7 @@ npm run dev
 - Eggs auto-hatch on `/state` once `hatch_at` passes (no cron).
 - Breeding cooldown is 10 minutes per parent.
 - Mutation chance: 0.2% (Aura/Accessory/EyeColor rare).
+- Hatch rewards grant Gold; use Gold in the shop for small boosts.
 
 ## Optional PNG Assets
 - Place part layers under `frontend/public/parts/{Locus}/{Value}.png`.
@@ -75,6 +76,8 @@ npm run dev
 - `POST /breed`: `{ parentAId, parentBId }` creates a new egg.
 - `POST /hatch`: `{ eggId }` hatch if ready.
 - `POST /reset`: Dev-only DB reset (requires `ENV=development`).
+- `POST /shop/refresh-emotion`: `{ petId }` reroll emotion (costs Gold).
+- `POST /shop/instant-hatch`: `{ eggId }` instantly hatch an egg (costs Gold).
 
 ---
 
@@ -116,6 +119,7 @@ npm run dev
 - `/state` 호출 시 `hatch_at`이 지난 알은 자동 부화(크론 없음).
 - 교배 쿨타임은 부모당 10분.
 - 돌연변이 확률 0.2% (Aura/Accessory/EyeColor 희귀 치환).
+- 부화 보상으로 골드를 획득하며, 상점에서 사용 가능.
 
 ## PNG 에셋(선택)
 - `frontend/public/parts/{Locus}/{Value}.png` 규칙으로 파츠 이미지 배치.
@@ -155,3 +159,5 @@ npm run dev
 - `POST /breed`: `{ parentAId, parentBId }`로 알 생성.
 - `POST /hatch`: `{ eggId }` 즉시 부화(준비된 알만).
 - `POST /reset`: 개발 환경 전용 DB 초기화(`ENV=development` 필요).
+- `POST /shop/refresh-emotion`: `{ petId }` 감정 리롤(골드 소모).
+- `POST /shop/instant-hatch`: `{ eggId }` 즉시 부화(골드 소모).
