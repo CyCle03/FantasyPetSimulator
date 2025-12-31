@@ -34,3 +34,42 @@ npm run dev
 - `POST /breed`: `{ parentAId, parentBId }` creates a new egg.
 - `POST /hatch`: `{ eggId }` hatch if ready.
 - `POST /reset`: Dev-only DB reset (requires `ENV=development`).
+
+---
+
+# FantasyPetSimulator (Korean)
+
+SD 판타지 펫을 수집하고 교배해 알을 만들며, 부화해 새 펫을 얻는 로컬 MVP입니다. 유전 계산과 RNG는 FastAPI 서버에서만 수행되고, Next.js UI는 phenotype을 텍스트/SVG로 표시합니다.
+
+## 구조
+- `backend/`: FastAPI + SQLAlchemy + SQLite
+- `frontend/`: Next.js (App Router) + Tailwind
+
+## 백엔드 실행
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+## 프론트엔드 실행
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+## MVP 규칙
+- 단일 로컬 유저, 인증 없음.
+- 유전 계산은 항상 서버에서 수행.
+- `/state` 호출 시 `hatch_at`이 지난 알은 자동 부화(크론 없음).
+- 교배 쿨타임은 부모당 10분.
+- 돌연변이 확률 0.2% (Aura/Accessory/EyeColor 희귀 치환).
+
+## API 엔드포인트
+- `GET /state`: 펫/알 목록 반환, 부화 가능한 알 자동 처리.
+- `POST /breed`: `{ parentAId, parentBId }`로 알 생성.
+- `POST /hatch`: `{ eggId }` 즉시 부화(준비된 알만).
+- `POST /reset`: 개발 환경 전용 DB 초기화(`ENV=development` 필요).
