@@ -4,8 +4,21 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import BreedPanel from "./components/BreedPanel";
 import EggCard from "./components/EggCard";
+import MarketPanel from "./components/MarketPanel";
 import PetCard from "./components/PetCard";
-import { breed, getState, hatch, reset, type Egg, type Pet } from "./lib/api";
+import {
+  breed,
+  buyListing,
+  cancelListing,
+  createListing,
+  getListings,
+  getState,
+  hatch,
+  reset,
+  type Egg,
+  type Listing,
+  type Pet
+} from "./lib/api";
 
 export default function Home() {
   const [pets, setPets] = useState<Pet[]>([]);
@@ -15,12 +28,20 @@ export default function Home() {
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(Date.now());
   const [rareReveal, setRareReveal] = useState<Pet | null>(null);
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [listingPetId, setListingPetId] = useState<number | null>(null);
+  const [listingPrice, setListingPrice] = useState("");
   const prevPetIds = useRef<Set<number>>(new Set());
+  const marketEnabled = process.env.NEXT_PUBLIC_ENABLE_MARKET === "true";
 
   const refresh = async () => {
     const state = await getState();
     setPets(state.pets);
     setEggs(state.eggs);
+    if (marketEnabled) {
+      const market = await getListings();
+      setListings(market);
+    }
   };
 
   useEffect(() => {
@@ -101,6 +122,53 @@ export default function Home() {
       await refresh();
     } catch (err: any) {
       setError(err.message || "Reset failed.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleCreateListing = async () => {
+    if (!listingPetId) return;
+    const priceValue = Number(listingPrice);
+    if (!priceValue || priceValue <= 0) {
+      setError("Enter a valid price.");
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    try {
+      await createListing(listingPetId, priceValue);
+      setListingPetId(null);
+      setListingPrice("");
+      await refresh();
+    } catch (err: any) {
+      setError(err.message || "Failed to list pet.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleBuyListing = async (id: number) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await buyListing(id);
+      await refresh();
+    } catch (err: any) {
+      setError(err.message || "Failed to buy listing.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleCancelListing = async (id: number) => {
+    setBusy(true);
+    setError(null);
+    try {
+      await cancelListing(id);
+      await refresh();
+    } catch (err: any) {
+      setError(err.message || "Failed to cancel listing.");
     } finally {
       setBusy(false);
     }
@@ -216,6 +284,23 @@ export default function Home() {
               <EggCard key={egg.id} egg={egg} now={now} onHatch={handleHatch} />
             ))}
           </div>
+        </section>
+
+        <section className="mt-10">
+          <MarketPanel
+            pets={pets}
+            listings={listings}
+            enabled={marketEnabled}
+            selectedPetId={listingPetId}
+            price={listingPrice}
+            onSelectPet={(id) => setListingPetId(id)}
+            onPriceChange={setListingPrice}
+            onCreate={handleCreateListing}
+            onBuy={handleBuyListing}
+            onCancel={handleCancelListing}
+            busy={busy}
+            error={error}
+          />
         </section>
       </div>
     </main>

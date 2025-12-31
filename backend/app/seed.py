@@ -33,6 +33,7 @@ def seed_db(db: Session) -> None:
             hidden_loci_json=hidden_loci,
             emotion=emotion,
             emotion_updated_at=datetime.utcnow(),
+            owner_name="LocalUser",
         )
         db.add(pet)
 

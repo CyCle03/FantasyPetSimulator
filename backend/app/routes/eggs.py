@@ -32,6 +32,7 @@ def _create_pet_from_genome(db: Session, genome: dict) -> Pet:
         hidden_loci_json=hidden_loci,
         emotion=emotion,
         emotion_updated_at=datetime.utcnow(),
+        owner_name="LocalUser",
     )
     db.add(pet)
     db.flush()

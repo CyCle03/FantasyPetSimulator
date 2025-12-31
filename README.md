@@ -42,6 +42,11 @@ npm run dev
 - Enable with `NEXT_PUBLIC_USE_PART_ASSETS=true` when running the frontend.
 - When disabled, the app uses the SVG fallback avatar.
 
+## Market (Experimental)
+- Enable backend: `ENABLE_MARKET=true`
+- Enable frontend: `NEXT_PUBLIC_ENABLE_MARKET=true`
+- Market adds listing/buy/cancel endpoints for local trading.
+
 ## API Endpoints
 - `GET /state`: Returns pets and eggs, auto-hatching ready eggs.
 - `POST /breed`: `{ parentAId, parentBId }` creates a new egg.
@@ -93,6 +98,11 @@ npm run dev
 - `frontend/public/parts/{Locus}/{Value}.png` 규칙으로 파츠 이미지 배치.
 - 프론트 실행 시 `NEXT_PUBLIC_USE_PART_ASSETS=true`를 설정하면 사용됨.
 - 비활성화 시 SVG 폴백 아바타 사용.
+
+## 마켓 (실험)
+- 백엔드 활성화: `ENABLE_MARKET=true`
+- 프론트 활성화: `NEXT_PUBLIC_ENABLE_MARKET=true`
+- 로컬 거래용 마켓(등록/구매/취소)을 추가합니다.
 
 ## API 엔드포인트
 - `GET /state`: 펫/알 목록 반환, 부화 가능한 알 자동 처리.

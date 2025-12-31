@@ -22,6 +22,7 @@ class Pet(Base):
     hidden_loci_json: Mapped[list] = mapped_column(JSON, default=list)
     emotion: Mapped[str] = mapped_column(String, default="Calm")
     emotion_updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    owner_name: Mapped[str] = mapped_column(String, default="LocalUser")
 
 
 class Egg(Base):
@@ -49,3 +50,18 @@ class Breeding(Base):
     parent_a: Mapped[Pet] = relationship("Pet", foreign_keys=[parent_a_id])
     parent_b: Mapped[Pet] = relationship("Pet", foreign_keys=[parent_b_id])
     egg: Mapped[Egg] = relationship("Egg")
+
+
+class MarketListing(Base):
+    __tablename__ = "market_listings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    pet_id: Mapped[int] = mapped_column(Integer, ForeignKey("pets.id"))
+    price: Mapped[int] = mapped_column(Integer, default=0)
+    status: Mapped[str] = mapped_column(String, default="Active")
+    seller_name: Mapped[str] = mapped_column(String, default="LocalUser")
+    buyer_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    sold_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    pet: Mapped[Pet] = relationship("Pet")

@@ -25,6 +25,17 @@ export type State = {
   eggs: Egg[];
 };
 
+export type Listing = {
+  id: number;
+  created_at: string;
+  pet_id: number;
+  price: number;
+  status: string;
+  seller_name: string;
+  buyer_name: string | null;
+  sold_at: string | null;
+};
+
 const BASE_URL = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
@@ -62,5 +73,30 @@ export function hatch(eggId: number): Promise<Egg> {
 export function reset(): Promise<{ ok: boolean }> {
   return request<{ ok: boolean }>("/reset", {
     method: "POST"
+  });
+}
+
+export function getListings(): Promise<Listing[]> {
+  return request<Listing[]>("/market/listings");
+}
+
+export function createListing(petId: number, price: number, sellerName?: string) {
+  return request<Listing>("/market/list", {
+    method: "POST",
+    body: JSON.stringify({ petId, price, sellerName })
+  });
+}
+
+export function buyListing(listingId: number, buyerName?: string) {
+  return request<Listing>("/market/buy", {
+    method: "POST",
+    body: JSON.stringify({ listingId, buyerName })
+  });
+}
+
+export function cancelListing(listingId: number) {
+  return request<Listing>("/market/cancel", {
+    method: "POST",
+    body: JSON.stringify({ listingId })
   });
 }

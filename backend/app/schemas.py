@@ -17,6 +17,7 @@ class PetOut(BaseModel):
     breeding_locked_until: datetime | None
     hidden_loci: list[str]
     emotion: str
+    owner_name: str
 
 
 class EggOut(BaseModel):
@@ -53,3 +54,29 @@ class HatchIn(BaseModel):
 
 class ResetOut(BaseModel):
     ok: bool
+
+
+class ListingOut(BaseModel):
+    id: int
+    created_at: datetime
+    pet_id: int
+    price: int
+    status: str
+    seller_name: str
+    buyer_name: str | None
+    sold_at: datetime | None
+
+
+class ListingCreateIn(BaseModel):
+    pet_id: int = Field(alias="petId")
+    price: int
+    seller_name: str | None = Field(default=None, alias="sellerName")
+
+
+class ListingBuyIn(BaseModel):
+    listing_id: int = Field(alias="listingId")
+    buyer_name: str | None = Field(default=None, alias="buyerName")
+
+
+class ListingCancelIn(BaseModel):
+    listing_id: int = Field(alias="listingId")

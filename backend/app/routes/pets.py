@@ -34,6 +34,7 @@ def _create_pet_from_genome(db: Session, genome: dict) -> Pet:
         hidden_loci_json=hidden_loci,
         emotion=emotion,
         emotion_updated_at=datetime.utcnow(),
+        owner_name="LocalUser",
     )
     db.add(pet)
     db.flush()
@@ -84,6 +85,7 @@ def get_state(db: Session = Depends(get_db)):
                 breeding_locked_until=pet.breeding_locked_until,
                 hidden_loci=pet.hidden_loci_json or [],
                 emotion=pet.emotion,
+                owner_name=pet.owner_name,
             )
             for pet in pets
         ],
