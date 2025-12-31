@@ -75,6 +75,14 @@ export default function Home() {
     () => pets.filter((pet) => selected.includes(pet.id)),
     [pets, selected]
   );
+  const incubatingEggs = useMemo(
+    () => eggs.filter((egg) => egg.status === "Incubating"),
+    [eggs]
+  );
+  const hatchedEggs = useMemo(
+    () => eggs.filter((egg) => egg.status !== "Incubating"),
+    [eggs]
+  );
 
   const toggleSelect = (id: number) => {
     setError(null);
@@ -227,6 +235,7 @@ export default function Home() {
                   pet={pet}
                   selected={selected.includes(pet.id)}
                   onSelect={toggleSelect}
+                  now={now}
                 />
               ))}
             </div>
@@ -256,12 +265,6 @@ export default function Home() {
                         <p>Element: {shown.Element}</p>
                         <p>Personality: {shown.Personality}</p>
                         <p>Emotion: {pet.emotion ?? "Calm"}</p>
-                        <p>
-                          Hidden:{" "}
-                          {pet.hidden_loci && pet.hidden_loci.length
-                            ? pet.hidden_loci.join(", ")
-                            : "None"}
-                        </p>
                       </div>
                     );
                   })
@@ -283,9 +286,24 @@ export default function Home() {
             </button>
           </div>
           <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {eggs.map((egg) => (
+            {incubatingEggs.map((egg) => (
               <EggCard key={egg.id} egg={egg} now={now} onHatch={handleHatch} />
             ))}
+          </div>
+        </section>
+
+        <section className="mt-10">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-2xl font-semibold">Hatched Eggs</h2>
+          </div>
+          <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {hatchedEggs.length === 0 ? (
+              <p className="text-sm text-ink/60">No hatched eggs yet.</p>
+            ) : (
+              hatchedEggs.map((egg) => (
+                <EggCard key={egg.id} egg={egg} now={now} onHatch={handleHatch} />
+              ))
+            )}
           </div>
         </section>
 

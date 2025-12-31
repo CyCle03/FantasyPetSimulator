@@ -19,6 +19,7 @@ export default function EggCard({
   const hatchAt = new Date(egg.hatch_at).getTime();
   const remaining = hatchAt - now;
   const ready = remaining <= 0 && egg.status === "Incubating";
+  const hatched = egg.status !== "Incubating";
 
   return (
     <div className="rounded-2xl border-2 border-amber-300 bg-white/80 p-4 shadow-sm">
@@ -28,12 +29,14 @@ export default function EggCard({
           <p className="text-sm text-ink/70">{egg.status}</p>
         </div>
         <span className="rounded-full bg-amber-200 px-3 py-1 text-xs text-ink">
-          {ready ? "Ready" : "Incubating"}
+          {hatched ? "Hatched" : ready ? "Ready" : "Incubating"}
         </span>
       </div>
 
       <div className="mt-3 text-sm text-ink/80">
-        <p>Time left: {ready ? "0m 0s" : formatCountdown(remaining)}</p>
+        <p>
+          Time left: {hatched ? "0m 0s" : ready ? "0m 0s" : formatCountdown(remaining)}
+        </p>
         <p>Species seed: {egg.genome.Species?.[0]}</p>
       </div>
 
@@ -46,7 +49,7 @@ export default function EggCard({
         onClick={() => ready && onHatch(egg.id)}
         disabled={!ready}
       >
-        Hatch
+        {hatched ? "Hatched" : "Hatch"}
       </button>
     </div>
   );
