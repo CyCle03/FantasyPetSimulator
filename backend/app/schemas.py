@@ -41,6 +41,7 @@ class BreedingOut(BaseModel):
 class StateOut(BaseModel):
     pets: list[PetOut]
     eggs: list[EggOut]
+    server_time: datetime
 
 
 class BreedIn(BaseModel):

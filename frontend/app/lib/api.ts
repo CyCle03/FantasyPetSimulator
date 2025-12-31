@@ -23,6 +23,7 @@ export type Egg = {
 export type State = {
   pets: Pet[];
   eggs: Egg[];
+  server_time: string;
 };
 
 export type Listing = {

@@ -27,6 +27,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(Date.now());
+  const [timeOffsetMs, setTimeOffsetMs] = useState(0);
   const [rareReveal, setRareReveal] = useState<Pet | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [listingPetId, setListingPetId] = useState<number | null>(null);
@@ -38,6 +39,8 @@ export default function Home() {
     const state = await getState();
     setPets(state.pets);
     setEggs(state.eggs);
+    const serverTime = new Date(state.server_time).getTime();
+    setTimeOffsetMs(serverTime - Date.now());
     if (marketEnabled) {
       const market = await getListings();
       setListings(market);
@@ -49,9 +52,9 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 1000);
+    const timer = setInterval(() => setNow(Date.now() + timeOffsetMs), 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [timeOffsetMs]);
 
   useEffect(() => {
     if (pets.length === 0) return;

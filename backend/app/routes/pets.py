@@ -100,6 +100,7 @@ def get_state(db: Session = Depends(get_db)):
             )
             for egg in eggs
         ],
+        server_time=now,
     )
 
 
