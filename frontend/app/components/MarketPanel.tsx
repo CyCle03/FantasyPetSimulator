@@ -12,7 +12,8 @@ export default function MarketPanel({
   onBuy,
   onCancel,
   busy,
-  error
+  error,
+  labels
 }: {
   pets: Pet[];
   listings: Listing[];
@@ -26,25 +27,34 @@ export default function MarketPanel({
   onCancel: (id: number) => void;
   busy: boolean;
   error: string | null;
+  labels: {
+    title: string;
+    disabled: string;
+    description: string;
+    choosePet: string;
+    price: string;
+    list: string;
+    listing: string;
+    pet: string;
+    seller: string;
+    buy: string;
+    cancel: string;
+    empty: string;
+  };
 }) {
   if (!enabled) {
     return (
       <section className="rounded-3xl border border-ink/10 bg-white/80 p-6 shadow-md">
-        <h2 className="text-xl font-semibold">Market</h2>
-        <p className="mt-2 text-sm text-ink/70">
-          Market is disabled. Set `ENABLE_MARKET=true` on the backend and
-          `NEXT_PUBLIC_ENABLE_MARKET=true` on the frontend to enable trading.
-        </p>
+        <h2 className="text-xl font-semibold">{labels.title}</h2>
+        <p className="mt-2 text-sm text-ink/70">{labels.disabled}</p>
       </section>
     );
   }
 
   return (
     <section className="rounded-3xl border border-ink/10 bg-white/80 p-6 shadow-md">
-      <h2 className="text-xl font-semibold">Pet Market</h2>
-      <p className="mt-1 text-sm text-ink/70">
-        List a pet for sale or buy from the market.
-      </p>
+      <h2 className="text-xl font-semibold">{labels.title}</h2>
+      <p className="mt-1 text-sm text-ink/70">{labels.description}</p>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <select
@@ -53,7 +63,7 @@ export default function MarketPanel({
           onChange={(event) => onSelectPet(Number(event.target.value))}
         >
           <option value="" disabled>
-            Choose pet
+            {labels.choosePet}
           </option>
           {pets.map((pet) => (
             <option key={pet.id} value={pet.id}>
@@ -64,7 +74,7 @@ export default function MarketPanel({
 
         <input
           className="w-28 rounded-full border border-ink/20 bg-white px-4 py-2 text-sm"
-          placeholder="Price"
+          placeholder={labels.price}
           value={price}
           onChange={(event) => onPriceChange(event.target.value)}
         />
@@ -78,7 +88,7 @@ export default function MarketPanel({
           disabled={!selectedPetId || !price || busy}
           onClick={onCreate}
         >
-          {busy ? "Listing..." : "List for sale"}
+          {busy ? labels.listing : labels.list}
         </button>
       </div>
 
@@ -86,7 +96,7 @@ export default function MarketPanel({
 
       <div className="mt-6 grid gap-3 md:grid-cols-2">
         {listings.length === 0 ? (
-          <p className="text-sm text-ink/60">No active listings.</p>
+          <p className="text-sm text-ink/60">{labels.empty}</p>
         ) : (
           listings.map((listing) => (
             <div
@@ -95,15 +105,15 @@ export default function MarketPanel({
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold">Listing #{listing.id}</p>
-                  <p className="text-xs text-ink/60">Pet #{listing.pet_id}</p>
+                  <p className="text-sm font-semibold">{labels.listing} #{listing.id}</p>
+                  <p className="text-xs text-ink/60">{labels.pet} #{listing.pet_id}</p>
                 </div>
                 <span className="rounded-full bg-ink px-3 py-1 text-xs text-white">
                   {listing.price} Gold
                 </span>
               </div>
               <p className="mt-2 text-xs text-ink/70">
-                Seller: {listing.seller_name}
+                {labels.seller}: {listing.seller_name}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
@@ -111,14 +121,14 @@ export default function MarketPanel({
                   onClick={() => onBuy(listing.id)}
                   disabled={busy}
                 >
-                  Buy
+                  {labels.buy}
                 </button>
                 <button
                   className="rounded-full border border-ink/20 px-3 py-1 text-xs font-semibold text-ink transition hover:bg-ink/10"
                   onClick={() => onCancel(listing.id)}
                   disabled={busy}
                 >
-                  Cancel
+                  {labels.cancel}
                 </button>
               </div>
             </div>

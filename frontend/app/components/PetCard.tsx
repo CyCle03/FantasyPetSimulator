@@ -20,15 +20,27 @@ const BADGE_STYLES: Record<string, string> = {
 export default function PetCard({
   pet,
   selected,
-  onSelect
+  onSelect,
+  now,
+  labels
 }: {
   pet: Pet;
   selected: boolean;
   onSelect: (id: number) => void;
+  now: number;
+  labels: {
+    body: string;
+    pattern: string;
+    aura: string;
+    emotion: string;
+    breeding: string;
+    ready: string;
+  };
 }) {
   const shown = pet.phenotype_public ?? pet.phenotype;
   const accent = RARITY_STYLES[pet.rarity_tier] || RARITY_STYLES.Common;
   const badge = BADGE_STYLES[pet.rarity_tier] || BADGE_STYLES.Common;
+  const cooldown = getCooldownText(pet.breeding_locked_until, now, labels.ready);
 
   return (
     <div
@@ -47,10 +59,11 @@ export default function PetCard({
       <div className="mt-3 flex items-center gap-3">
         <PetAvatar pet={pet} />
         <div className="text-sm text-ink/80">
-          <p>Body: {shown.BodyType}</p>
-          <p>Pattern: {shown.Pattern}</p>
-          <p>Aura: {shown.Aura}</p>
-          <p>Emotion: {pet.emotion ?? "Calm"}</p>
+          <p>{labels.body}: {shown.BodyType}</p>
+          <p>{labels.pattern}: {shown.Pattern}</p>
+          <p>{labels.aura}: {shown.Aura}</p>
+          <p>{labels.emotion}: {pet.emotion ?? "Calm"}</p>
+          <p>{labels.breeding}: {cooldown}</p>
         </div>
       </div>
 
@@ -66,4 +79,15 @@ export default function PetCard({
       </button>
     </div>
   );
+}
+
+function getCooldownText(lockedUntil: string | null, now: number, readyLabel: string) {
+  if (!lockedUntil) return readyLabel;
+  const until = new Date(lockedUntil).getTime();
+  const remaining = until - now;
+  if (remaining <= 0) return readyLabel;
+  const totalSeconds = Math.floor(remaining / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}m ${seconds}s`;
 }

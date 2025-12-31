@@ -10,11 +10,20 @@ function formatCountdown(ms: number): string {
 export default function EggCard({
   egg,
   now,
-  onHatch
+  onHatch,
+  labels
 }: {
   egg: Egg;
   now: number;
   onHatch: (id: number) => void;
+  labels: {
+    ready: string;
+    incubating: string;
+    hatched: string;
+    timeLeft: string;
+    speciesSeed: string;
+    hatch: string;
+  };
 }) {
   const hatchAt = new Date(egg.hatch_at).getTime();
   const remaining = hatchAt - now;
@@ -29,15 +38,17 @@ export default function EggCard({
           <p className="text-sm text-ink/70">{egg.status}</p>
         </div>
         <span className="rounded-full bg-amber-200 px-3 py-1 text-xs text-ink">
-          {hatched ? "Hatched" : ready ? "Ready" : "Incubating"}
+          {hatched ? labels.hatched : ready ? labels.ready : labels.incubating}
         </span>
       </div>
 
       <div className="mt-3 text-sm text-ink/80">
         <p>
-          Time left: {hatched ? "0m 0s" : ready ? "0m 0s" : formatCountdown(remaining)}
+          {labels.timeLeft}: {hatched ? "0m 0s" : ready ? "0m 0s" : formatCountdown(remaining)}
         </p>
-        <p>Species seed: {egg.genome.Species?.[0]}</p>
+        <p>
+          {labels.speciesSeed}: {egg.genome.Species?.[0]}
+        </p>
       </div>
 
       <button
@@ -49,7 +60,7 @@ export default function EggCard({
         onClick={() => ready && onHatch(egg.id)}
         disabled={!ready}
       >
-        {hatched ? "Hatched" : "Hatch"}
+        {hatched ? labels.hatched : labels.hatch}
       </button>
     </div>
   );

@@ -21,6 +21,7 @@ import {
 } from "./lib/api";
 
 export default function Home() {
+  const [lang, setLang] = useState<"en" | "ko">("en");
   const [pets, setPets] = useState<Pet[]>([]);
   const [eggs, setEggs] = useState<Egg[]>([]);
   const [selected, setSelected] = useState<number[]>([]);
@@ -34,6 +35,114 @@ export default function Home() {
   const [listingPrice, setListingPrice] = useState("");
   const prevPetIds = useRef<Set<number>>(new Set());
   const marketEnabled = process.env.NEXT_PUBLIC_ENABLE_MARKET === "true";
+
+  const copy = {
+    en: {
+      title: "Collect, Breed, and Hatch",
+      subtitle:
+        "Genetics are calculated server-side. Each pet is defined by a layered genome, rendered here as SVG and descriptive traits.",
+      refresh: "Refresh",
+      myPets: "My Pets",
+      myEggs: "My Eggs",
+      hatchedEggs: "Hatched Eggs",
+      resetDb: "Reset DB (dev)",
+      selectedTitle: "Selected Details",
+      selectedEmpty: "Select two pets to compare phenotypes.",
+      breedPanel: {
+        title: "Breeding Chamber",
+        description:
+          "Combine two pets to create a new egg. Cooldown applies after breeding.",
+        selectionPlaceholder: "Pick two pets",
+        breed: "Breed",
+        breeding: "Breeding...",
+        availablePets: "Available pets"
+      },
+      petCard: {
+        body: "Body",
+        pattern: "Pattern",
+        aura: "Aura",
+        emotion: "Emotion",
+        breeding: "Breeding",
+        ready: "Ready"
+      },
+      eggCard: {
+        ready: "Ready",
+        incubating: "Incubating",
+        hatched: "Hatched",
+        timeLeft: "Time left",
+        speciesSeed: "Species seed",
+        hatch: "Hatch"
+      },
+      market: {
+        title: "Pet Market",
+        disabled:
+          "Market is disabled. Set `ENABLE_MARKET=true` on the backend and `NEXT_PUBLIC_ENABLE_MARKET=true` on the frontend to enable trading.",
+        description: "List a pet for sale or buy from the market.",
+        choosePet: "Choose pet",
+        price: "Price",
+        list: "List for sale",
+        listing: "Listing",
+        pet: "Pet",
+        seller: "Seller",
+        buy: "Buy",
+        cancel: "Cancel",
+        empty: "No active listings."
+      }
+    },
+    ko: {
+      title: "수집하고, 교배하고, 부화하세요",
+      subtitle:
+        "유전 계산은 서버에서 수행됩니다. 각 펫은 레이어드 유전자로 정의되며 SVG와 특성 텍스트로 표시됩니다.",
+      refresh: "새로고침",
+      myPets: "내 펫",
+      myEggs: "내 알",
+      hatchedEggs: "부화 완료 알",
+      resetDb: "DB 초기화 (dev)",
+      selectedTitle: "선택 상세",
+      selectedEmpty: "펫 두 마리를 선택해 phenotype을 비교하세요.",
+      breedPanel: {
+        title: "교배실",
+        description: "두 펫을 합쳐 새로운 알을 만듭니다. 교배 후 쿨타임이 적용됩니다.",
+        selectionPlaceholder: "펫 두 마리를 선택하세요",
+        breed: "교배",
+        breeding: "교배 중...",
+        availablePets: "보유 펫"
+      },
+      petCard: {
+        body: "몸체",
+        pattern: "패턴",
+        aura: "오라",
+        emotion: "감정",
+        breeding: "교배",
+        ready: "가능"
+      },
+      eggCard: {
+        ready: "준비됨",
+        incubating: "부화 중",
+        hatched: "부화 완료",
+        timeLeft: "남은 시간",
+        speciesSeed: "종족 시드",
+        hatch: "부화"
+      },
+      market: {
+        title: "펫 마켓",
+        disabled:
+          "마켓이 비활성화되어 있습니다. 백엔드에 `ENABLE_MARKET=true`, 프론트에 `NEXT_PUBLIC_ENABLE_MARKET=true`를 설정하세요.",
+        description: "펫을 판매 등록하거나 마켓에서 구매하세요.",
+        choosePet: "펫 선택",
+        price: "가격",
+        list: "판매 등록",
+        listing: "등록",
+        pet: "펫",
+        seller: "판매자",
+        buy: "구매",
+        cancel: "취소",
+        empty: "활성화된 등록이 없습니다."
+      }
+    }
+  } as const;
+
+  const text = copy[lang];
 
   const refresh = async () => {
     const state = await getState();
@@ -209,25 +318,30 @@ export default function Home() {
             <p className="text-sm uppercase tracking-[0.2em] text-ink/50">
               SD Fantasy Pet Lab
             </p>
-            <h1 className="mt-2 text-3xl font-semibold">
-              Collect, Breed, and Hatch
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm text-ink/70">
-              Genetics are calculated server-side. Each pet is defined by a layered
-              genome, rendered here as SVG and descriptive traits.
-            </p>
+            <h1 className="mt-2 text-3xl font-semibold">{text.title}</h1>
+            <p className="mt-2 max-w-2xl text-sm text-ink/70">{text.subtitle}</p>
           </div>
-          <button
-            className="rounded-full border border-ink/20 bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-ink/10"
-            onClick={refresh}
-          >
-            Refresh
-          </button>
+          <div className="flex items-center gap-3">
+            <select
+              className="rounded-full border border-ink/20 bg-white px-3 py-2 text-sm"
+              value={lang}
+              onChange={(event) => setLang(event.target.value as "en" | "ko")}
+            >
+              <option value="en">English</option>
+              <option value="ko">한국어</option>
+            </select>
+            <button
+              className="rounded-full border border-ink/20 bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-ink/10"
+              onClick={refresh}
+            >
+              {text.refresh}
+            </button>
+          </div>
         </header>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[2fr_1fr]">
           <div className="space-y-6">
-            <h2 className="text-2xl font-semibold">My Pets</h2>
+            <h2 className="text-2xl font-semibold">{text.myPets}</h2>
             <div className="grid gap-4 md:grid-cols-2">
               {pets.map((pet) => (
                 <PetCard
@@ -236,6 +350,7 @@ export default function Home() {
                   selected={selected.includes(pet.id)}
                   onSelect={toggleSelect}
                   now={now}
+                  labels={text.petCard}
                 />
               ))}
             </div>
@@ -248,13 +363,14 @@ export default function Home() {
               onBreed={handleBreed}
               error={error}
               busy={busy}
+              labels={text.breedPanel}
             />
 
             <section className="rounded-3xl border border-ink/10 bg-white/80 p-6 shadow-md">
-              <h3 className="text-lg font-semibold">Selected Details</h3>
+              <h3 className="text-lg font-semibold">{text.selectedTitle}</h3>
               <div className="mt-3 space-y-3 text-sm text-ink/80">
                 {selectedPets.length === 0 ? (
-                  <p>Select two pets to compare phenotypes.</p>
+                  <p>{text.selectedEmpty}</p>
                 ) : (
                   selectedPets.map((pet) => {
                     const shown = pet.phenotype_public ?? pet.phenotype;
@@ -276,32 +392,46 @@ export default function Home() {
 
         <section className="mt-10">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-2xl font-semibold">My Eggs</h2>
+            <h2 className="text-2xl font-semibold">{text.myEggs}</h2>
             <button
               className="rounded-full border border-ink/20 bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-ink/10"
               onClick={handleReset}
               disabled={busy}
             >
-              Reset DB (dev)
+              {text.resetDb}
             </button>
           </div>
           <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {incubatingEggs.map((egg) => (
-              <EggCard key={egg.id} egg={egg} now={now} onHatch={handleHatch} />
+              <EggCard
+                key={egg.id}
+                egg={egg}
+                now={now}
+                onHatch={handleHatch}
+                labels={text.eggCard}
+              />
             ))}
           </div>
         </section>
 
         <section className="mt-10">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-2xl font-semibold">Hatched Eggs</h2>
+            <h2 className="text-2xl font-semibold">{text.hatchedEggs}</h2>
           </div>
           <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {hatchedEggs.length === 0 ? (
-              <p className="text-sm text-ink/60">No hatched eggs yet.</p>
+              <p className="text-sm text-ink/60">
+                {lang === "ko" ? "부화 완료 알이 없습니다." : "No hatched eggs yet."}
+              </p>
             ) : (
               hatchedEggs.map((egg) => (
-                <EggCard key={egg.id} egg={egg} now={now} onHatch={handleHatch} />
+                <EggCard
+                  key={egg.id}
+                  egg={egg}
+                  now={now}
+                  onHatch={handleHatch}
+                  labels={text.eggCard}
+                />
               ))
             )}
           </div>
@@ -321,6 +451,7 @@ export default function Home() {
             onCancel={handleCancelListing}
             busy={busy}
             error={error}
+            labels={text.market}
           />
         </section>
       </div>
