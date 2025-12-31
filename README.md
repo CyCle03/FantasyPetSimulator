@@ -41,6 +41,11 @@ npm run dev
 - Place part layers under `frontend/public/parts/{Locus}/{Value}.png`.
 - Enable with `NEXT_PUBLIC_USE_PART_ASSETS=true` when running the frontend.
 - When disabled, the app uses the SVG fallback avatar.
+- You can list expected asset paths with:
+  ```bash
+  cd backend
+  python3 tools/list_asset_paths.py
+  ```
 
 ## UI Language
 - Use the language dropdown in the header to switch between English and Korean.
@@ -101,6 +106,11 @@ npm run dev
 - `frontend/public/parts/{Locus}/{Value}.png` 규칙으로 파츠 이미지 배치.
 - 프론트 실행 시 `NEXT_PUBLIC_USE_PART_ASSETS=true`를 설정하면 사용됨.
 - 비활성화 시 SVG 폴백 아바타 사용.
+- 필요한 에셋 경로를 확인하려면:
+  ```bash
+  cd backend
+  python3 tools/list_asset_paths.py
+  ```
 
 ## 언어 선택
 - 상단 언어 선택 드롭다운에서 영어/한국어를 전환할 수 있습니다.

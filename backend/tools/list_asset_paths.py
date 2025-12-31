@@ -1,6 +1,12 @@
 from __future__ import annotations
 
 from pathlib import Path
+import sys
+
+CURRENT_DIR = Path(__file__).resolve()
+BACKEND_DIR = CURRENT_DIR.parents[1]
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
 
 from app.genetics.genome import COMMON_ALLELES, RARE_ALLELES
 
