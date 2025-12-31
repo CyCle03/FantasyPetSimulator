@@ -49,7 +49,7 @@ export default function PetCard({
 
   return (
     <div
-      className={`rounded-2xl border-2 ${accent} bg-white/80 p-4 shadow-sm transition`}
+      className={`rounded-2xl border-2 ${accent} bg-white/80 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md`}
     >
       <div className="flex items-start justify-between gap-2">
         <div>
@@ -68,7 +68,7 @@ export default function PetCard({
           className="rounded-2xl focus:outline-none focus:ring-2 focus:ring-amber-300"
           aria-label={labels.view}
         >
-          <PetAvatar pet={pet} />
+          <PetAvatar pet={pet} showBadge={false} />
         </button>
         <div className="text-sm text-ink/80">
           <p>{labels.body}: {shown.BodyType}</p>

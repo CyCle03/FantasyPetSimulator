@@ -25,16 +25,21 @@ function assetPath(locus: string, value: string) {
 
 export default function PetAvatar({
   pet,
-  size = 80
+  size = 80,
+  showBadge = true
 }: {
   pet: Pet;
   size?: number;
+  showBadge?: boolean;
 }) {
   const shown = pet.phenotype_public ?? pet.phenotype;
   const [failed, setFailed] = useState<Set<string>>(new Set());
   const [hasLoadedAsset, setHasLoadedAsset] = useState(false);
   const maskWidth = Math.round(size * 0.5);
   const maskHeight = Math.round(size * 0.18);
+  const tier = pet.rarity_tier;
+  const badgeFont = size < 100 ? "text-[9px]" : "text-[10px]";
+  const badgePad = size < 100 ? "px-1.5 py-0.5" : "px-2 py-0.5";
   const layers = useMemo(
     () =>
       LAYERS.map((locus) => ({
@@ -49,6 +54,11 @@ export default function PetAvatar({
       className="relative overflow-hidden rounded-2xl border border-ink/10 bg-white"
       style={{ width: size, height: size }}
     >
+      {tier !== "Common" ? (
+        <div
+          className={`absolute inset-0 rounded-2xl ${getRarityGlowClass(tier)}`}
+        />
+      ) : null}
       {!USE_ASSETS || !hasLoadedAsset ? (
         <svg width={size} height={size} viewBox="0 0 80 80" aria-hidden>
           <defs>
@@ -98,6 +108,45 @@ export default function PetAvatar({
           style={{ width: maskWidth, height: maskHeight }}
         />
       ) : null}
+      {showBadge ? (
+        <div className="absolute right-1 top-1">
+          <span
+            className={`rounded-full ${badgePad} ${badgeFont} font-semibold ${getBadgeClass(tier)}`}
+          >
+            {tier}
+          </span>
+        </div>
+      ) : null}
     </div>
   );
+}
+
+function getRarityGlowClass(tier: string) {
+  switch (tier) {
+    case "Uncommon":
+      return "ring-2 ring-moss/60";
+    case "Rare":
+      return "ring-2 ring-sky/70 shadow-[0_0_12px_rgba(37,99,235,0.35)]";
+    case "Epic":
+      return "ring-2 ring-ember/80 shadow-[0_0_16px_rgba(249,115,22,0.4)]";
+    case "Legendary":
+      return "ring-2 ring-black shadow-[0_0_18px_rgba(15,23,42,0.5)]";
+    default:
+      return "";
+  }
+}
+
+function getBadgeClass(tier: string) {
+  switch (tier) {
+    case "Uncommon":
+      return "bg-moss text-white";
+    case "Rare":
+      return "bg-sky text-white";
+    case "Epic":
+      return "bg-ember text-white";
+    case "Legendary":
+      return "bg-black text-white";
+    default:
+      return "bg-pearl text-ink";
+  }
 }
