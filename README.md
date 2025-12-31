@@ -55,6 +55,21 @@ npm run dev
 - Enable frontend: `NEXT_PUBLIC_ENABLE_MARKET=true`
 - Market adds listing/buy/cancel endpoints for local trading.
 
+## Deployment (Free Tier)
+### Backend (Render)
+1) Create a new Web Service from the GitHub repo.
+2) Set the root directory to `backend`.
+3) Build command: `pip install -r requirements.txt`
+4) Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+5) Add env vars as needed (example: `ENABLE_MARKET=true`).
+
+### Frontend (Vercel)
+1) Import the GitHub repo in Vercel.
+2) Set the root directory to `frontend`.
+3) Set env var `NEXT_PUBLIC_API_BASE` to your Render backend URL.
+4) (Optional) `NEXT_PUBLIC_USE_PART_ASSETS=true`
+5) (Optional) `NEXT_PUBLIC_ENABLE_MARKET=true`
+
 ## API Endpoints
 - `GET /state`: Returns pets and eggs, auto-hatching ready eggs.
 - `POST /breed`: `{ parentAId, parentBId }` creates a new egg.
@@ -119,6 +134,21 @@ npm run dev
 - 백엔드 활성화: `ENABLE_MARKET=true`
 - 프론트 활성화: `NEXT_PUBLIC_ENABLE_MARKET=true`
 - 로컬 거래용 마켓(등록/구매/취소)을 추가합니다.
+
+## 배포 (무료 플랜)
+### 백엔드 (Render)
+1) GitHub 레포에서 Web Service 생성
+2) Root Directory: `backend`
+3) Build Command: `pip install -r requirements.txt`
+4) Start Command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+5) 필요 시 환경변수 설정 (예: `ENABLE_MARKET=true`)
+
+### 프론트엔드 (Vercel)
+1) Vercel에 GitHub 레포 Import
+2) Root Directory: `frontend`
+3) `NEXT_PUBLIC_API_BASE`를 Render 백엔드 URL로 설정
+4) (선택) `NEXT_PUBLIC_USE_PART_ASSETS=true`
+5) (선택) `NEXT_PUBLIC_ENABLE_MARKET=true`
 
 ## API 엔드포인트
 - `GET /state`: 펫/알 목록 반환, 부화 가능한 알 자동 처리.
