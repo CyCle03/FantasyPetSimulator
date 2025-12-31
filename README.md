@@ -37,6 +37,11 @@ npm run dev
 - Breeding cooldown is 10 minutes per parent.
 - Mutation chance: 0.2% (Aura/Accessory/EyeColor rare).
 
+## Optional PNG Assets
+- Place part layers under `frontend/public/parts/{Locus}/{Value}.png`.
+- Enable with `NEXT_PUBLIC_USE_PART_ASSETS=true` when running the frontend.
+- When disabled, the app uses the SVG fallback avatar.
+
 ## API Endpoints
 - `GET /state`: Returns pets and eggs, auto-hatching ready eggs.
 - `POST /breed`: `{ parentAId, parentBId }` creates a new egg.
@@ -83,6 +88,11 @@ npm run dev
 - `/state` 호출 시 `hatch_at`이 지난 알은 자동 부화(크론 없음).
 - 교배 쿨타임은 부모당 10분.
 - 돌연변이 확률 0.2% (Aura/Accessory/EyeColor 희귀 치환).
+
+## PNG 에셋(선택)
+- `frontend/public/parts/{Locus}/{Value}.png` 규칙으로 파츠 이미지 배치.
+- 프론트 실행 시 `NEXT_PUBLIC_USE_PART_ASSETS=true`를 설정하면 사용됨.
+- 비활성화 시 SVG 폴백 아바타 사용.
 
 ## API 엔드포인트
 - `GET /state`: 펫/알 목록 반환, 부화 가능한 알 자동 처리.

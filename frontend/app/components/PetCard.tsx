@@ -1,4 +1,5 @@
 import type { Pet } from "../lib/api";
+import PetAvatar from "./PetAvatar";
 
 const RARITY_STYLES: Record<string, string> = {
   Common: "border-pearl",
@@ -44,24 +45,7 @@ export default function PetCard({
       </div>
 
       <div className="mt-3 flex items-center gap-3">
-        <svg width="60" height="60" viewBox="0 0 60 60" aria-hidden>
-          <defs>
-            <linearGradient id={`grad-${pet.id}`} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#e2e8f0" />
-              <stop offset="100%" stopColor="#94a3b8" />
-            </linearGradient>
-          </defs>
-          <circle cx="30" cy="30" r="24" fill={`url(#grad-${pet.id})`} />
-          <circle cx="22" cy="26" r="4" fill="#0f172a" />
-          <circle cx="38" cy="26" r="4" fill={shown.EyeColor === "Void" ? "#111827" : "#1f2937"} />
-          <path
-            d="M20 38 C26 44, 34 44, 40 38"
-            stroke="#1f2937"
-            strokeWidth="3"
-            fill="none"
-            strokeLinecap="round"
-          />
-        </svg>
+        <PetAvatar pet={pet} />
         <div className="text-sm text-ink/80">
           <p>Body: {shown.BodyType}</p>
           <p>Pattern: {shown.Pattern}</p>
