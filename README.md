@@ -9,10 +9,16 @@ A local MVP for collecting and breeding SD fantasy pets. Genetics and RNG are ca
 ## Run the backend
 ```bash
 cd backend
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 uvicorn app.main:app --reload
+```
+
+If `python3 -m venv` fails, install the venv package first:
+```bash
+sudo apt install python3-venv
 ```
 
 ## Run the frontend
@@ -48,10 +54,16 @@ SD 판타지 펫을 수집하고 교배해 알을 만들며, 부화해 새 펫�
 ## 백엔드 실행
 ```bash
 cd backend
-python -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 uvicorn app.main:app --reload
+```
+
+`python3 -m venv`가 실패하면 venv 패키지를 먼저 설치하세요:
+```bash
+sudo apt install python3-venv
 ```
 
 ## 프론트엔드 실행
