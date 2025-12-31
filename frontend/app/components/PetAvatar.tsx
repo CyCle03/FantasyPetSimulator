@@ -23,10 +23,18 @@ function assetPath(locus: string, value: string) {
   return `/parts/${locus}/${value}.png`;
 }
 
-export default function PetAvatar({ pet }: { pet: Pet }) {
+export default function PetAvatar({
+  pet,
+  size = 80
+}: {
+  pet: Pet;
+  size?: number;
+}) {
   const shown = pet.phenotype_public ?? pet.phenotype;
   const [failed, setFailed] = useState<Set<string>>(new Set());
   const [hasLoadedAsset, setHasLoadedAsset] = useState(false);
+  const maskWidth = Math.round(size * 0.5);
+  const maskHeight = Math.round(size * 0.18);
   const layers = useMemo(
     () =>
       LAYERS.map((locus) => ({
@@ -37,9 +45,12 @@ export default function PetAvatar({ pet }: { pet: Pet }) {
   );
 
   return (
-    <div className="relative h-20 w-20 overflow-hidden rounded-2xl border border-ink/10 bg-white">
+    <div
+      className="relative overflow-hidden rounded-2xl border border-ink/10 bg-white"
+      style={{ width: size, height: size }}
+    >
       {!USE_ASSETS || !hasLoadedAsset ? (
-        <svg width="80" height="80" viewBox="0 0 80 80" aria-hidden>
+        <svg width={size} height={size} viewBox="0 0 80 80" aria-hidden>
           <defs>
             <linearGradient id={`grad-${pet.id}`} x1="0" y1="0" x2="1" y2="1">
               <stop offset="0%" stopColor="#e2e8f0" />
@@ -81,6 +92,12 @@ export default function PetAvatar({ pet }: { pet: Pet }) {
             );
           })
         : null}
+      {USE_ASSETS ? (
+        <div
+          className="absolute left-0 top-0 bg-white"
+          style={{ width: maskWidth, height: maskHeight }}
+        />
+      ) : null}
     </div>
   );
 }
