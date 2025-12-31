@@ -60,3 +60,19 @@ body {
 .float-slow {
   animation: float-slow 12s ease-in-out infinite;
 }
+
+@keyframes legendary-pulse {
+  0% {
+    filter: drop-shadow(0 0 6px rgba(15, 23, 42, 0.35));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(15, 23, 42, 0.6));
+  }
+  100% {
+    filter: drop-shadow(0 0 6px rgba(15, 23, 42, 0.35));
+  }
+}
+
+.legendary-pulse {
+  animation: legendary-pulse 2.2s ease-in-out infinite;
+}

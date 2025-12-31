@@ -10,7 +10,7 @@ from ..database import get_db
 from ..genetics.emotions import pick_emotion
 from ..genetics.genome import choose_hidden_loci
 from ..genetics.phenotype import genome_to_phenotype
-from ..genetics.rarity import hatch_reward, rarity_score, rarity_tier
+from ..genetics.rarity import hatch_reward, rarity_profile
 from ..models import Egg, Pet, Player
 from ..schemas import EggOut, HatchIn
 
@@ -20,8 +20,7 @@ router = APIRouter()
 def _create_pet_from_genome(db: Session, genome: dict) -> Pet:
     rng = random.Random()
     phenotype = genome_to_phenotype(genome)
-    score = rarity_score(phenotype)
-    tier = rarity_tier(score)
+    score, tier, tags = rarity_profile(phenotype)
     hidden_loci = choose_hidden_loci(rng)
     emotion = pick_emotion(rng, phenotype.get("Personality", "Calm"))
     pet = Pet(
@@ -29,6 +28,7 @@ def _create_pet_from_genome(db: Session, genome: dict) -> Pet:
         phenotype_json=phenotype,
         rarity_score=score,
         rarity_tier=tier,
+        rarity_tags_json=tags,
         hidden_loci_json=hidden_loci,
         emotion=emotion,
         emotion_updated_at=datetime.utcnow(),
@@ -49,6 +49,15 @@ def _get_player(db: Session) -> Player:
     return player
 
 
+def _hatch_egg(db: Session, egg: Egg, player: Player, now: datetime) -> None:
+    pet = _create_pet_from_genome(db, egg.genome_json)
+    reward = hatch_reward(pet.rarity_score, pet.rarity_tier)
+    player.gold += reward
+    egg.status = "Hatched"
+    egg.hatched_pet_id = pet.id
+    egg.hatch_at = now
+
+
 @router.post("/hatch", response_model=EggOut)
 def hatch_egg(payload: HatchIn, db: Session = Depends(get_db)):
     egg = db.query(Egg).filter(Egg.id == payload.egg_id).first()
@@ -61,12 +70,8 @@ def hatch_egg(payload: HatchIn, db: Session = Depends(get_db)):
     if egg.hatch_at > now:
         raise HTTPException(status_code=400, detail="Egg is not ready yet.")
 
-    pet = _create_pet_from_genome(db, egg.genome_json)
     player = _get_player(db)
-    reward = hatch_reward(pet.rarity_score, pet.rarity_tier)
-    player.gold += reward
-    egg.status = "Hatched"
-    egg.hatched_pet_id = pet.id
+    _hatch_egg(db, egg, player, now)
     db.commit()
 
     return EggOut(
@@ -77,3 +82,33 @@ def hatch_egg(payload: HatchIn, db: Session = Depends(get_db)):
         status=egg.status,
         hatched_pet_id=egg.hatched_pet_id,
     )
+
+
+@router.post("/hatch-all", response_model=list[EggOut])
+def hatch_all_eggs(db: Session = Depends(get_db)):
+    now = datetime.utcnow()
+    eggs_ready = (
+        db.query(Egg)
+        .filter(Egg.status == "Incubating", Egg.hatch_at <= now)
+        .all()
+    )
+    if not eggs_ready:
+        return []
+
+    player = _get_player(db)
+    for egg in eggs_ready:
+        _hatch_egg(db, egg, player, now)
+
+    db.commit()
+
+    return [
+        EggOut(
+            id=egg.id,
+            created_at=egg.created_at,
+            hatch_at=egg.hatch_at,
+            genome=egg.genome_json,
+            status=egg.status,
+            hatched_pet_id=egg.hatched_pet_id,
+        )
+        for egg in eggs_ready
+    ]

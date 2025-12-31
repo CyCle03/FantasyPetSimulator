@@ -14,6 +14,7 @@ class PetOut(BaseModel):
     phenotype_public: dict[str, Any]
     rarity_score: int
     rarity_tier: str
+    rarity_tags: list[str]
     breeding_locked_until: datetime | None
     hidden_loci: list[str]
     emotion: str

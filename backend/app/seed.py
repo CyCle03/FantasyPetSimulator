@@ -9,7 +9,7 @@ from .genetics.emotions import pick_emotion
 from .genetics.genome import choose_hidden_loci
 from .genetics.genome import random_genome
 from .genetics.phenotype import genome_to_phenotype
-from .genetics.rarity import rarity_score, rarity_tier
+from .genetics.rarity import rarity_profile
 from .models import Pet, Player
 
 
@@ -24,8 +24,7 @@ def seed_db(db: Session) -> None:
     for _ in range(2):
         genome = random_genome(rng)
         phenotype = genome_to_phenotype(genome)
-        score = rarity_score(phenotype)
-        tier = rarity_tier(score)
+        score, tier, tags = rarity_profile(phenotype)
         hidden_loci = choose_hidden_loci(rng)
         emotion = pick_emotion(rng, phenotype.get("Personality", "Calm"))
         pet = Pet(
@@ -33,6 +32,7 @@ def seed_db(db: Session) -> None:
             phenotype_json=phenotype,
             rarity_score=score,
             rarity_tier=tier,
+            rarity_tags_json=tags,
             hidden_loci_json=hidden_loci,
             emotion=emotion,
             emotion_updated_at=datetime.utcnow(),

@@ -16,6 +16,7 @@ import {
   getListings,
   getState,
   hatch,
+  hatchAll,
   instantHatch,
   refreshEmotion,
   reset,
@@ -120,7 +121,8 @@ export default function Home() {
       ui: {
         showMore: "Show more",
         total: "total",
-        rareHatch: "Rare Hatch"
+        rareHatch: "Rare Hatch",
+        hatchAll: "Hatch all ready"
       }
     },
     ko: {
@@ -196,7 +198,8 @@ export default function Home() {
       ui: {
         showMore: "더 보기",
         total: "총",
-        rareHatch: "희귀 부화"
+        rareHatch: "희귀 부화",
+        hatchAll: "준비된 알 모두 부화"
       }
     }
   } as const;
@@ -257,6 +260,10 @@ export default function Home() {
     () => eggs.filter((egg) => egg.status === "Incubating"),
     [eggs]
   );
+  const readyEggs = useMemo(
+    () => incubatingEggs.filter((egg) => new Date(egg.hatch_at).getTime() <= now),
+    [incubatingEggs, now]
+  );
   const hatchedEggs = useMemo(
     () => eggs.filter((egg) => egg.status !== "Incubating"),
     [eggs]
@@ -303,6 +310,20 @@ export default function Home() {
       await refresh();
     } catch (err: any) {
       setError(err.message || "Hatch failed.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleHatchAll = async () => {
+    if (readyEggs.length === 0) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await hatchAll();
+      await refresh();
+    } catch (err: any) {
+      setError(err.message || "Hatch all failed.");
     } finally {
       setBusy(false);
     }
@@ -592,13 +613,22 @@ export default function Home() {
         <section className="mt-10">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-2xl font-semibold">{text.myEggs}</h2>
-            <button
-              className="rounded-full border border-ink/20 bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-ink/10"
-              onClick={handleReset}
-              disabled={busy}
-            >
-              {text.resetDb}
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                className="rounded-full border border-ink/20 bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-ink/10 disabled:cursor-not-allowed disabled:opacity-60"
+                onClick={handleHatchAll}
+                disabled={busy || readyEggs.length === 0}
+              >
+                {text.ui.hatchAll} ({readyEggs.length})
+              </button>
+              <button
+                className="rounded-full border border-ink/20 bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-ink/10"
+                onClick={handleReset}
+                disabled={busy}
+              >
+                {text.resetDb}
+              </button>
+            </div>
           </div>
           <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {incubatingEggs.map((egg) => (

@@ -42,8 +42,8 @@ def breed_pets(payload: BreedIn, db: Session = Depends(get_db)):
     child_genome, _ = breed(
         parent_a.genome_json,
         parent_b.genome_json,
-        parent_a.phenotype_json["Species"],
-        parent_b.phenotype_json["Species"],
+        parent_a.phenotype_json,
+        parent_b.phenotype_json,
         rng,
     )
 

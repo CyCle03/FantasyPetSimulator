@@ -10,7 +10,7 @@ from ..database import get_db
 from ..genetics.emotions import pick_emotion
 from ..genetics.genome import choose_hidden_loci
 from ..genetics.phenotype import genome_to_phenotype
-from ..genetics.rarity import rarity_score, rarity_tier
+from ..genetics.rarity import rarity_profile
 from ..models import Egg, Pet, Player
 from ..schemas import ShopEmotionIn, ShopHatchIn, ShopResultOut
 
@@ -64,14 +64,14 @@ def instant_hatch(payload: ShopHatchIn, db: Session = Depends(get_db)):
     player.gold -= INSTANT_HATCH_COST
     rng = random.Random()
     phenotype = genome_to_phenotype(egg.genome_json)
-    score = rarity_score(phenotype)
-    tier = rarity_tier(score)
+    score, tier, tags = rarity_profile(phenotype)
     hidden_loci = choose_hidden_loci(rng)
     pet = Pet(
         genome_json=egg.genome_json,
         phenotype_json=phenotype,
         rarity_score=score,
         rarity_tier=tier,
+        rarity_tags_json=tags,
         hidden_loci_json=hidden_loci,
         emotion=pick_emotion(rng, phenotype.get("Personality", "Calm")),
         emotion_updated_at=datetime.utcnow(),

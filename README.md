@@ -37,6 +37,7 @@ npm run dev
 - Breeding cooldown is 10 minutes per parent.
 - Mutation chance: 0.2% (Aura/Accessory/EyeColor rare).
 - Hatch rewards grant Gold; use Gold in the shop for small boosts.
+- Rarity tiers are server-calculated using part synergy rules.
 
 ## Optional PNG Assets
 - Place part layers under `frontend/public/parts/{Locus}/{Value}.png`.
@@ -72,12 +73,20 @@ npm run dev
 5) (Optional) `NEXT_PUBLIC_ENABLE_MARKET=true`
 
 ## API Endpoints
-- `GET /state`: Returns pets and eggs, auto-hatching ready eggs.
+- `GET /state`: Returns pets and eggs.
 - `POST /breed`: `{ parentAId, parentBId }` creates a new egg.
 - `POST /hatch`: `{ eggId }` hatch if ready.
+- `POST /hatch-all`: Hatch all ready eggs.
 - `POST /reset`: Dev-only DB reset (requires `ENV=development`).
 - `POST /shop/refresh-emotion`: `{ petId }` reroll emotion (costs Gold).
 - `POST /shop/instant-hatch`: `{ eggId }` instantly hatch an egg (costs Gold).
+
+## Simulation (Balance Check)
+```bash
+cd backend
+python3 tools/simulate_breeding.py --count 1000
+```
+Outputs `reports/pets.json` and `reports/rarity.csv`.
 
 ---
 
@@ -120,6 +129,7 @@ npm run dev
 - 교배 쿨타임은 부모당 10분.
 - 돌연변이 확률 0.2% (Aura/Accessory/EyeColor 희귀 치환).
 - 부화 보상으로 골드를 획득하며, 상점에서 사용 가능.
+- 희귀도 등급은 서버 시너지 규칙으로 계산.
 
 ## PNG 에셋(선택)
 - `frontend/public/parts/{Locus}/{Value}.png` 규칙으로 파츠 이미지 배치.
@@ -155,9 +165,17 @@ npm run dev
 5) (선택) `NEXT_PUBLIC_ENABLE_MARKET=true`
 
 ## API 엔드포인트
-- `GET /state`: 펫/알 목록 반환, 부화 가능한 알 자동 처리.
+- `GET /state`: 펫/알 목록 반환.
 - `POST /breed`: `{ parentAId, parentBId }`로 알 생성.
-- `POST /hatch`: `{ eggId }` 즉시 부화(준비된 알만).
+- `POST /hatch`: `{ eggId }` 부화(준비된 알만).
+- `POST /hatch-all`: 준비된 알을 모두 부화.
 - `POST /reset`: 개발 환경 전용 DB 초기화(`ENV=development` 필요).
 - `POST /shop/refresh-emotion`: `{ petId }` 감정 리롤(골드 소모).
 - `POST /shop/instant-hatch`: `{ eggId }` 즉시 부화(골드 소모).
+
+## 시뮬레이션(밸런스 확인)
+```bash
+cd backend
+python3 tools/simulate_breeding.py --count 1000
+```
+`reports/pets.json`, `reports/rarity.csv` 출력.

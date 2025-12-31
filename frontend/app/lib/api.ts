@@ -6,6 +6,7 @@ export type Pet = {
   phenotype_public?: Record<string, string>;
   rarity_score: number;
   rarity_tier: string;
+  rarity_tags: string[];
   breeding_locked_until: string | null;
   hidden_loci?: string[];
   emotion?: string;
@@ -69,6 +70,12 @@ export function hatch(eggId: number): Promise<Egg> {
   return request<Egg>("/hatch", {
     method: "POST",
     body: JSON.stringify({ eggId })
+  });
+}
+
+export function hatchAll(): Promise<Egg[]> {
+  return request<Egg[]>("/hatch-all", {
+    method: "POST"
   });
 }
 

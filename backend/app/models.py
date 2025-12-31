@@ -18,6 +18,7 @@ class Pet(Base):
     phenotype_json: Mapped[dict] = mapped_column(JSON, nullable=False)
     rarity_score: Mapped[int] = mapped_column(Integer, default=0)
     rarity_tier: Mapped[str] = mapped_column(String, default="Common")
+    rarity_tags_json: Mapped[list] = mapped_column(JSON, default=list)
     breeding_locked_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     hidden_loci_json: Mapped[list] = mapped_column(JSON, default=list)
     emotion: Mapped[str] = mapped_column(String, default="Calm")

@@ -52,20 +52,18 @@ export default function PetAvatar({
     [shown]
   );
 
+  const frameStyle =
+    tier !== "Common"
+      ? { boxShadow: getRarityGlowShadow(tier, glowBlur, ringSize) }
+      : undefined;
+
   return (
     <div
-      className="relative overflow-hidden rounded-2xl border border-ink/10 bg-white"
-      style={{ width: size, height: size }}
+      className={`relative overflow-hidden rounded-2xl border border-ink/10 bg-white ${
+        tier === "Legendary" ? "legendary-pulse" : ""
+      }`}
+      style={{ width: size, height: size, ...frameStyle }}
     >
-      {tier !== "Common" ? (
-        <div
-          className="absolute inset-0 rounded-2xl"
-          style={{
-            boxShadow: getRarityGlowShadow(tier, glowBlur),
-            border: `${ringSize}px solid ${getRarityColor(tier)}`
-          }}
-        />
-      ) : null}
       {!USE_ASSETS || !hasLoadedAsset ? (
         <svg width={size} height={size} viewBox="0 0 80 80" aria-hidden>
           <defs>
@@ -91,12 +89,14 @@ export default function PetAvatar({
         ? layers.map((layer) => {
             const src = assetPath(layer.locus, layer.value);
             if (failed.has(src)) return null;
+            const auraBoost = layer.locus === "Aura" && ["Rare", "Epic", "Legendary"].includes(tier);
             return (
               <img
                 key={`${layer.locus}-${layer.value}`}
                 src={src}
                 alt=""
                 className="absolute inset-0 h-full w-full object-contain"
+                style={auraBoost ? { opacity: 0.9 } : undefined}
                 onLoad={() => setHasLoadedAsset(true)}
                 onError={() =>
                   setFailed((prev) => {
@@ -163,7 +163,9 @@ function getRarityColor(tier: string) {
   }
 }
 
-function getRarityGlowShadow(tier: string, blur: number) {
+function getRarityGlowShadow(tier: string, blur: number, ring: number) {
   const color = getRarityColor(tier);
-  return `0 0 ${blur}px ${color}88, 0 0 ${Math.round(blur * 1.5)}px ${color}55`;
+  return `0 0 0 ${ring}px ${color}, 0 0 ${blur}px ${color}88, 0 0 ${Math.round(
+    blur * 1.5
+  )}px ${color}55`;
 }
