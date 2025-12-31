@@ -10,3 +10,37 @@ body {
   @apply bg-parchment text-ink;
   font-family: "Bree Serif", "Georgia", serif;
 }
+
+@keyframes rare-pop {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  20% {
+    transform: scale(1.02);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 100% 50%;
+  }
+}
+
+.rare-reveal {
+  animation: rare-pop 0.6s ease-out forwards;
+}
+
+.rare-shimmer {
+  background: linear-gradient(120deg, #fde68a, #f97316, #fb7185, #fde68a);
+  background-size: 300% 300%;
+  animation: shimmer 2s ease infinite;
+}

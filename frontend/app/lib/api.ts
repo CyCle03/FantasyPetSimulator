@@ -3,9 +3,12 @@ export type Pet = {
   created_at: string;
   genome: Record<string, string[]>;
   phenotype: Record<string, string>;
+  phenotype_public?: Record<string, string>;
   rarity_score: number;
   rarity_tier: string;
   breeding_locked_until: string | null;
+  hidden_loci?: string[];
+  emotion?: string;
 };
 
 export type Egg = {

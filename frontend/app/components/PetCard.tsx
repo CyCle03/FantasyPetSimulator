@@ -25,6 +25,7 @@ export default function PetCard({
   selected: boolean;
   onSelect: (id: number) => void;
 }) {
+  const shown = pet.phenotype_public ?? pet.phenotype;
   const accent = RARITY_STYLES[pet.rarity_tier] || RARITY_STYLES.Common;
   const badge = BADGE_STYLES[pet.rarity_tier] || BADGE_STYLES.Common;
 
@@ -34,7 +35,7 @@ export default function PetCard({
     >
       <div className="flex items-start justify-between gap-2">
         <div>
-          <h3 className="text-lg font-semibold">{pet.phenotype.Species}</h3>
+          <h3 className="text-lg font-semibold">{shown.Species}</h3>
           <p className="text-sm text-ink/70">ID #{pet.id}</p>
         </div>
         <span className={`rounded-full px-3 py-1 text-xs ${badge}`}>
@@ -52,7 +53,7 @@ export default function PetCard({
           </defs>
           <circle cx="30" cy="30" r="24" fill={`url(#grad-${pet.id})`} />
           <circle cx="22" cy="26" r="4" fill="#0f172a" />
-          <circle cx="38" cy="26" r="4" fill={pet.phenotype.EyeColor === "Void" ? "#111827" : "#1f2937"} />
+          <circle cx="38" cy="26" r="4" fill={shown.EyeColor === "Void" ? "#111827" : "#1f2937"} />
           <path
             d="M20 38 C26 44, 34 44, 40 38"
             stroke="#1f2937"
@@ -62,9 +63,10 @@ export default function PetCard({
           />
         </svg>
         <div className="text-sm text-ink/80">
-          <p>Body: {pet.phenotype.BodyType}</p>
-          <p>Pattern: {pet.phenotype.Pattern}</p>
-          <p>Aura: {pet.phenotype.Aura}</p>
+          <p>Body: {shown.BodyType}</p>
+          <p>Pattern: {shown.Pattern}</p>
+          <p>Aura: {shown.Aura}</p>
+          <p>Emotion: {pet.emotion ?? "Calm"}</p>
         </div>
       </div>
 

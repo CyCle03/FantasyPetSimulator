@@ -19,6 +19,9 @@ class Pet(Base):
     rarity_score: Mapped[int] = mapped_column(Integer, default=0)
     rarity_tier: Mapped[str] = mapped_column(String, default="Common")
     breeding_locked_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    hidden_loci_json: Mapped[list] = mapped_column(JSON, default=list)
+    emotion: Mapped[str] = mapped_column(String, default="Calm")
+    emotion_updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
 class Egg(Base):

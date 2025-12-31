@@ -11,9 +11,12 @@ class PetOut(BaseModel):
     created_at: datetime
     genome: dict[str, Any]
     phenotype: dict[str, Any]
+    phenotype_public: dict[str, Any]
     rarity_score: int
     rarity_tier: str
     breeding_locked_until: datetime | None
+    hidden_loci: list[str]
+    emotion: str
 
 
 class EggOut(BaseModel):

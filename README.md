@@ -21,6 +21,8 @@ If `python3 -m venv` fails, install the venv package first:
 sudo apt install python3-venv
 ```
 
+If you see a SQLite column error after pulling new changes, delete `backend/pets.db` and restart to recreate the DB.
+
 ## Run the frontend
 ```bash
 cd frontend
@@ -65,6 +67,8 @@ uvicorn app.main:app --reload
 ```bash
 sudo apt install python3-venv
 ```
+
+업데이트 후 SQLite 컬럼 오류가 나면 `backend/pets.db`를 삭제하고 재실행하세요.
 
 ## 프론트엔드 실행
 ```bash

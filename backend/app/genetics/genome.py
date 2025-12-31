@@ -47,6 +47,16 @@ RARE_ALLELES: Dict[str, List[str]] = {
     "EyeColor": ["Void"],
 }
 
+HIDDEN_CANDIDATES = [
+    "Aura",
+    "Accessory",
+    "EyeColor",
+    "Element",
+    "Personality",
+    "ShinyGene",
+    "MutationSlot",
+]
+
 
 def random_genome(rng: random.Random) -> dict:
     genome = {}
@@ -58,3 +68,8 @@ def random_genome(rng: random.Random) -> dict:
 
 def inherit_allele(rng: random.Random, allele_pair: list[str]) -> str:
     return rng.choice(allele_pair)
+
+
+def choose_hidden_loci(rng: random.Random, count: int = 3) -> list[str]:
+    count = min(count, len(HIDDEN_CANDIDATES))
+    return rng.sample(HIDDEN_CANDIDATES, k=count)

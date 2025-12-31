@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import random
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..database import get_db
+from ..genetics.emotions import pick_emotion
+from ..genetics.genome import choose_hidden_loci
 from ..genetics.phenotype import genome_to_phenotype
 from ..genetics.rarity import rarity_score, rarity_tier
 from ..models import Egg, Pet
@@ -15,14 +18,20 @@ router = APIRouter()
 
 
 def _create_pet_from_genome(db: Session, genome: dict) -> Pet:
+    rng = random.Random()
     phenotype = genome_to_phenotype(genome)
     score = rarity_score(phenotype)
     tier = rarity_tier(score)
+    hidden_loci = choose_hidden_loci(rng)
+    emotion = pick_emotion(rng, phenotype.get("Personality", "Calm"))
     pet = Pet(
         genome_json=genome,
         phenotype_json=phenotype,
         rarity_score=score,
         rarity_tier=tier,
+        hidden_loci_json=hidden_loci,
+        emotion=emotion,
+        emotion_updated_at=datetime.utcnow(),
     )
     db.add(pet)
     db.flush()
