@@ -132,3 +132,22 @@ body {
 .adopt-ready {
   animation: adopt-ready 1.6s ease-out infinite;
 }
+
+@keyframes pet-highlight {
+  0% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.2);
+    transform: translateY(-2px) scale(1.01);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+    transform: translateY(0px) scale(1);
+  }
+}
+
+.pet-highlight {
+  animation: pet-highlight 1.4s ease-out;
+}

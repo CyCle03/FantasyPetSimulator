@@ -23,7 +23,8 @@ export default function PetCard({
   onSelect,
   now,
   labels,
-  onView
+  onView,
+  highlight
 }: {
   pet: Pet;
   selected: boolean;
@@ -41,6 +42,7 @@ export default function PetCard({
     selected: string;
   };
   onView: (pet: Pet) => void;
+  highlight?: boolean;
 }) {
   const shown = pet.phenotype_public ?? pet.phenotype;
   const accent = RARITY_STYLES[pet.rarity_tier] || RARITY_STYLES.Common;
@@ -49,7 +51,10 @@ export default function PetCard({
 
   return (
     <div
-      className={`rounded-2xl border-2 ${accent} bg-white/80 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md`}
+      data-pet-id={pet.id}
+      className={`rounded-2xl border-2 ${accent} bg-white/80 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+        highlight ? "pet-highlight" : ""
+      }`}
     >
       <div className="flex items-start justify-between gap-2">
         <div>

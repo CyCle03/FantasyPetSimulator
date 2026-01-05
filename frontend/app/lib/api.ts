@@ -29,6 +29,8 @@ export type State = {
   emotion_refresh_cost: number;
   instant_hatch_cost: number;
   reveal_aura_cost: number;
+  reveal_eye_color_cost: number;
+  reveal_accessory_cost: number;
   adopt_egg_cost: number;
   adopt_egg_cooldown_seconds: number;
   adopt_egg_ready_at: string | null;
@@ -153,9 +155,12 @@ export function sellPet(petId: number) {
   });
 }
 
-export function revealAura(petId: number) {
-  return request<{ ok: boolean; gold: number; revealed: boolean }>("/shop/reveal-aura", {
-    method: "POST",
-    body: JSON.stringify({ petId })
-  });
+export function revealHidden(petId: number, locus?: string) {
+  return request<{ ok: boolean; gold: number; revealed: boolean; locus: string }>(
+    "/shop/reveal",
+    {
+      method: "POST",
+      body: JSON.stringify({ petId, locus })
+    }
+  );
 }

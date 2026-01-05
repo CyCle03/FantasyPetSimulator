@@ -20,7 +20,7 @@ import {
   adoptEgg,
   adoptPremiumEgg,
   sellPet,
-  revealAura,
+  revealHidden,
   instantHatch,
   refreshEmotion,
   reset,
@@ -58,7 +58,10 @@ export default function Home() {
   const [sellPrices, setSellPrices] = useState<Record<string, number>>({});
   const [sellError, setSellError] = useState<string | null>(null);
   const [revealAuraCost, setRevealAuraCost] = useState(8);
-  const [revealAuraError, setRevealAuraError] = useState<string | null>(null);
+  const [revealEyeColorCost, setRevealEyeColorCost] = useState(6);
+  const [revealAccessoryCost, setRevealAccessoryCost] = useState(6);
+  const [revealHiddenError, setRevealHiddenError] = useState<string | null>(null);
+  const [highlightPetId, setHighlightPetId] = useState<number | null>(null);
   const [premiumEggCost, setPremiumEggCost] = useState(30);
   const [premiumEggCooldownSeconds, setPremiumEggCooldownSeconds] = useState(600);
   const [premiumEggReadyAt, setPremiumEggReadyAt] = useState<string | null>(null);
@@ -125,6 +128,12 @@ export default function Home() {
         seller: "Seller",
         buy: "Buy",
         cancel: "Cancel",
+        confirmTitle: "Confirm action",
+        confirmBuyBody: "Buy listing #{id} for {price} Gold?",
+        confirmCancelBody: "Cancel listing #{id}?",
+        confirm: "Confirm",
+        mineOnly: "My listings only",
+        goldLabel: "Gold",
         empty: "No active listings."
       },
       petModal: {
@@ -141,7 +150,10 @@ export default function Home() {
         adopt: "Adopt Egg",
         premium: "Premium Egg (Rare Odds)",
         sell: "Sell Pet",
-        revealAura: "Reveal Aura",
+        revealHidden: "Reveal Hidden Trait",
+        revealAura: "Aura",
+        revealEyeColor: "Eye Color",
+        revealAccessory: "Accessory",
         selectPet: "Choose pet",
         selectEgg: "Choose egg",
         selectSellPet: "Choose pet",
@@ -150,7 +162,7 @@ export default function Home() {
         adoptAction: "Adopt",
         premiumAction: "Adopt",
         sellAction: "Sell",
-        revealAuraAction: "Reveal",
+        revealHiddenAction: "Reveal",
         cost: "Cost",
         cooldown: "Cooldown",
         status: "Status",
@@ -161,14 +173,14 @@ export default function Home() {
         adoptBadge: "NEW",
         premiumBadge: "PREMIUM",
         sellBadge: "GOLD",
-        revealAuraBadge: "HIDDEN",
+        revealHiddenBadge: "HIDDEN",
         payout: "Payout",
         sellHint: "Selling removes the pet immediately.",
         sellConfirmTitle: "Confirm sale",
         sellConfirmBody: "Sell pet #{id} ({tier}) for {payout} Gold?",
         cancel: "Cancel",
         confirm: "Confirm",
-        revealAuraHint: "Spend Gold to reveal a hidden Aura."
+        revealHiddenHint: "Spend Gold to reveal a hidden trait."
       },
       ui: {
         showMore: "Show more",
@@ -230,6 +242,12 @@ export default function Home() {
         seller: "판매자",
         buy: "구매",
         cancel: "취소",
+        confirmTitle: "확인",
+        confirmBuyBody: "등록 #{id}를 {price} 골드에 구매할까요?",
+        confirmCancelBody: "등록 #{id}를 취소할까요?",
+        confirm: "확인",
+        mineOnly: "내 등록만",
+        goldLabel: "골드",
         empty: "활성화된 등록이 없습니다."
       },
       petModal: {
@@ -246,7 +264,10 @@ export default function Home() {
         adopt: "알 입양",
         premium: "프리미엄 알(희귀 확률↑)",
         sell: "펫 판매",
-        revealAura: "오라 공개",
+        revealHidden: "숨김 파츠 공개",
+        revealAura: "오라",
+        revealEyeColor: "눈색",
+        revealAccessory: "액세서리",
         selectPet: "펫 선택",
         selectEgg: "알 선택",
         selectSellPet: "펫 선택",
@@ -255,7 +276,7 @@ export default function Home() {
         adoptAction: "입양",
         premiumAction: "입양",
         sellAction: "판매",
-        revealAuraAction: "공개",
+        revealHiddenAction: "공개",
         cost: "가격",
         cooldown: "쿨타임",
         status: "상태",
@@ -266,14 +287,14 @@ export default function Home() {
         adoptBadge: "신규",
         premiumBadge: "프리미엄",
         sellBadge: "골드",
-        revealAuraBadge: "숨김",
+        revealHiddenBadge: "숨김",
         payout: "지급",
         sellHint: "판매 즉시 펫이 삭제됩니다.",
         sellConfirmTitle: "판매 확인",
         sellConfirmBody: "펫 #{id} ({tier})를 {payout} 골드에 판매할까요?",
         cancel: "취소",
         confirm: "확인",
-        revealAuraHint: "골드를 사용해 숨겨진 오라를 공개합니다."
+        revealHiddenHint: "골드를 사용해 숨겨진 파츠를 공개합니다."
       },
       ui: {
         showMore: "더 보기",
@@ -313,6 +334,8 @@ export default function Home() {
     setEmotionRefreshCost(state.emotion_refresh_cost ?? 10);
     setInstantHatchCost(state.instant_hatch_cost ?? 15);
     setRevealAuraCost(state.reveal_aura_cost ?? 8);
+    setRevealEyeColorCost(state.reveal_eye_color_cost ?? 6);
+    setRevealAccessoryCost(state.reveal_accessory_cost ?? 6);
     setAdoptEggCost(state.adopt_egg_cost ?? adoptEggCostFallback);
     setAdoptEggCooldownSeconds(
       state.adopt_egg_cooldown_seconds ?? adoptEggCooldownMinutesFallback * 60
@@ -386,6 +409,12 @@ export default function Home() {
   }, [highlightEggId]);
 
   useEffect(() => {
+    if (!highlightPetId) return;
+    const timer = setTimeout(() => setHighlightPetId(null), 2000);
+    return () => clearTimeout(timer);
+  }, [highlightPetId]);
+
+  useEffect(() => {
     const prev = prevAdoptRemaining.current;
     if (prev > 0 && adoptRemainingSeconds === 0) {
       setToast(text.ui.toastAdoptReady);
@@ -410,6 +439,14 @@ export default function Home() {
       target.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [highlightEggId]);
+
+  useEffect(() => {
+    if (!highlightPetId) return;
+    const target = document.querySelector(`[data-pet-id="${highlightPetId}"]`);
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [highlightPetId]);
 
   const selectedPets = useMemo(
     () => pets.filter((pet) => selected.includes(pet.id)),
@@ -541,20 +578,36 @@ export default function Home() {
     }
   };
 
-  const handleRevealAura = async (petId: number) => {
+  const handleRevealHidden = async (
+    petId: number,
+    locus: "Aura" | "EyeColor" | "Accessory"
+  ) => {
     setBusy(true);
     setError(null);
-    setRevealAuraError(null);
+    setRevealHiddenError(null);
     try {
-      const result = await revealAura(petId);
+      const result = await revealHidden(petId, locus);
       await refresh();
       if (!result.revealed) {
-        setRevealAuraError(
-          lang === "ko" ? "이미 공개된 오라입니다." : "Aura already revealed."
+        setRevealHiddenError(
+          lang === "ko" ? "이미 공개된 항목입니다." : "Trait already revealed."
         );
+      } else {
+        const label =
+          locus === "Aura"
+            ? text.shop.revealAura
+            : locus === "EyeColor"
+              ? text.shop.revealEyeColor
+              : text.shop.revealAccessory;
+        setToast(
+          lang === "ko"
+            ? `${label} 공개됨!`
+            : `${label} revealed!`
+        );
+        setHighlightPetId(petId);
       }
     } catch (err: any) {
-      setRevealAuraError(err.message || "Failed to reveal aura.");
+      setRevealHiddenError(err.message || "Failed to reveal trait.");
     } finally {
       setBusy(false);
     }
@@ -781,6 +834,7 @@ export default function Home() {
                   now={now}
                   labels={text.petCard}
                   onView={setActivePet}
+                  highlight={pet.id === highlightPetId}
                 />
               ))}
             </div>
@@ -849,17 +903,19 @@ export default function Home() {
               premiumHighlight={premiumHighlight}
               sellPrices={sellPrices}
               revealAuraCost={revealAuraCost}
+              revealEyeColorCost={revealEyeColorCost}
+              revealAccessoryCost={revealAccessoryCost}
               onRefreshEmotion={handleRefreshEmotion}
               onInstantHatch={handleInstantHatch}
               onAdoptEgg={handleAdoptEgg}
               onAdoptPremiumEgg={handleAdoptPremiumEgg}
-              onRevealAura={handleRevealAura}
+              onRevealHidden={handleRevealHidden}
               onSellPet={handleSellPet}
               busy={busy}
               error={error}
               adoptError={adoptError}
               premiumAdoptError={premiumAdoptError}
-              revealAuraError={revealAuraError}
+              revealHiddenError={revealHiddenError}
               sellError={sellError}
               labels={text.shop}
             />
@@ -941,6 +997,7 @@ export default function Home() {
             pets={pets}
             listings={listings}
             enabled={marketEnabled}
+            gold={gold}
             selectedPetId={listingPetId}
             price={listingPrice}
             onSelectPet={(id) => setListingPetId(id)}

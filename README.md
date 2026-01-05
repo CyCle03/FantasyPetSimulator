@@ -54,14 +54,14 @@ Environment variables:
 - Per-locus mutation starts at 10% and is tuned by element clashes and rarity stabilization.
 - Extra rare mutation: 0.2% chance to force a rare Aura/Accessory/EyeColor.
 - Hatch rewards grant Gold; shop costs default to 10 (emotion refresh), 15 (instant hatch), and 12 (adopt egg).
-- Reveal hidden Aura costs 8 Gold by default.
+- Reveal hidden traits cost 8 (Aura), 6 (EyeColor), 6 (Accessory) by default.
 - Sell payouts default to 5/10/20/40/80 for Common→Legendary.
 - Rarity tiers are server-calculated using part synergy rules.
 - `BREEDING_MUTATION_MULTIPLIER` scales mutation chances.
 - `ADOPT_EGG_COST` and `ADOPT_EGG_COOLDOWN_SECONDS` tune adopt pricing and cooldown.
 - `SELL_PRICE_COMMON`, `SELL_PRICE_UNCOMMON`, `SELL_PRICE_RARE`, `SELL_PRICE_EPIC`, `SELL_PRICE_LEGENDARY` tune sell payouts.
 - `ADOPT_PREMIUM_EGG_COST`, `ADOPT_PREMIUM_EGG_COOLDOWN_SECONDS`, `ADOPT_PREMIUM_RARE_CHANCE`, `ADOPT_PREMIUM_AURA_ACTIVE_CHANCE`, `ADOPT_PREMIUM_SHINY_CHANCE` tune premium adopt.
-- `REVEAL_AURA_COST` tunes hidden aura reveal cost.
+- `REVEAL_AURA_COST`, `REVEAL_EYE_COLOR_COST`, `REVEAL_ACCESSORY_COST` tune hidden reveal costs.
 
 ## PNG Parts & Design
 - Sample parts are under `frontend/public/parts/{Locus}/{Value}.png`.
@@ -79,6 +79,9 @@ Environment variables:
 
 ## Troubleshooting
 - If you see `no such column: players.adopt_egg_ready_at` or `players.adopt_premium_egg_ready_at`, delete `backend/pets.db` and restart.
+
+## DB Schema Changes
+- This MVP does not run migrations. When new columns are added, delete `backend/pets.db` (or call `/reset` in dev) to recreate the schema.
 
 ## Market (Experimental)
 - Enable backend: `ENABLE_MARKET=true`
@@ -111,7 +114,7 @@ Environment variables:
 - `POST /shop/refresh-emotion`: `{ petId }` reroll emotion (costs Gold).
 - `POST /shop/instant-hatch`: `{ eggId }` instantly hatch an egg (costs Gold).
 - `POST /shop/sell`: `{ petId }` sell a pet for Gold.
-- `POST /shop/reveal-aura`: `{ petId }` reveal hidden Aura (costs Gold).
+- `POST /shop/reveal`: `{ petId, locus }` reveal hidden trait (costs Gold).
 - `GET /market/listings`: List active market items (when enabled).
 - `POST /market/list`: `{ petId, price, sellerName? }` create a listing.
 - `POST /market/buy`: `{ listingId, buyerName? }` buy a listing.
@@ -182,14 +185,14 @@ npm run dev
 - 로커스별 돌연변이 확률은 기본 10%이며, 상성/희귀도 보정이 적용됩니다.
 - 추가 희귀 돌연변이: Aura/Accessory/EyeColor 0.2% 강제 희귀 치환.
 - 부화 보상으로 골드를 획득하며, 상점 비용 기본값은 10(감정 리롤), 15(즉시 부화), 12(알 입양)입니다.
-- 숨겨진 오라 공개 기본 비용은 8 골드입니다.
+- 숨겨진 파츠 공개 기본 비용은 오라 8, 눈색/액세서리 6 골드입니다.
 - 판매 보상 기본값은 Common→Legendary 기준 5/10/20/40/80입니다.
 - 희귀도 등급은 서버 시너지 규칙으로 계산.
 - `BREEDING_MUTATION_MULTIPLIER`로 돌연변이 확률을 조정할 수 있습니다.
 - `ADOPT_EGG_COST`, `ADOPT_EGG_COOLDOWN_SECONDS`로 알 입양 비용/쿨타임을 조정할 수 있습니다.
 - `SELL_PRICE_COMMON`, `SELL_PRICE_UNCOMMON`, `SELL_PRICE_RARE`, `SELL_PRICE_EPIC`, `SELL_PRICE_LEGENDARY`로 판매 보상을 조정할 수 있습니다.
 - `ADOPT_PREMIUM_EGG_COST`, `ADOPT_PREMIUM_EGG_COOLDOWN_SECONDS`, `ADOPT_PREMIUM_RARE_CHANCE`, `ADOPT_PREMIUM_AURA_ACTIVE_CHANCE`, `ADOPT_PREMIUM_SHINY_CHANCE`로 프리미엄 입양을 조정할 수 있습니다.
-- `REVEAL_AURA_COST`로 숨겨진 오라 공개 비용을 조정할 수 있습니다.
+- `REVEAL_AURA_COST`, `REVEAL_EYE_COLOR_COST`, `REVEAL_ACCESSORY_COST`로 숨겨진 파츠 공개 비용을 조정할 수 있습니다.
 
 ## PNG 파츠 & 디자인
 - 샘플 파츠는 `frontend/public/parts/{Locus}/{Value}.png`에 포함됩니다.
@@ -207,6 +210,9 @@ npm run dev
 
 ## 트러블슈팅
 - `no such column: players.adopt_egg_ready_at` 또는 `players.adopt_premium_egg_ready_at` 오류가 보이면 `backend/pets.db`를 삭제 후 재실행하세요.
+
+## DB 스키마 변경
+- 마이그레이션을 자동으로 실행하지 않습니다. 컬럼이 추가되면 `backend/pets.db`를 삭제(또는 개발 환경에서 `/reset`)해 스키마를 재생성하세요.
 
 ## 마켓 (실험)
 - 백엔드 활성화: `ENABLE_MARKET=true`
@@ -239,7 +245,7 @@ npm run dev
 - `POST /shop/refresh-emotion`: `{ petId }` 감정 리롤(골드 소모).
 - `POST /shop/instant-hatch`: `{ eggId }` 즉시 부화(골드 소모).
 - `POST /shop/sell`: `{ petId }` 펫 판매(골드 획득).
-- `POST /shop/reveal-aura`: `{ petId }` 숨겨진 오라 공개(골드 소모).
+- `POST /shop/reveal`: `{ petId, locus }` 숨겨진 파츠 공개(골드 소모).
 - `GET /market/listings`: 마켓 목록 조회(활성화 시).
 - `POST /market/list`: `{ petId, price, sellerName? }` 등록.
 - `POST /market/buy`: `{ listingId, buyerName? }` 구매.

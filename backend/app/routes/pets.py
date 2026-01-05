@@ -15,7 +15,14 @@ from ..genetics.rarity import hatch_reward, rarity_profile
 from ..models import Egg, Pet, Player
 from ..schemas import EggOut, PetOut, ResetOut, StateOut
 from ..seed import seed_db
-from .shop import EMOTION_REFRESH_COST, INSTANT_HATCH_COST, REVEAL_AURA_COST, SELL_PRICES
+from .shop import (
+    EMOTION_REFRESH_COST,
+    INSTANT_HATCH_COST,
+    REVEAL_ACCESSORY_COST,
+    REVEAL_AURA_COST,
+    REVEAL_EYE_COLOR_COST,
+    SELL_PRICES,
+)
 
 router = APIRouter()
 ADOPT_EGG_COST = int(os.getenv("ADOPT_EGG_COST", "12"))
@@ -112,6 +119,8 @@ def get_state(db: Session = Depends(get_db)):
         emotion_refresh_cost=EMOTION_REFRESH_COST,
         instant_hatch_cost=INSTANT_HATCH_COST,
         reveal_aura_cost=REVEAL_AURA_COST,
+        reveal_eye_color_cost=REVEAL_EYE_COLOR_COST,
+        reveal_accessory_cost=REVEAL_ACCESSORY_COST,
         adopt_egg_cost=ADOPT_EGG_COST,
         adopt_egg_cooldown_seconds=ADOPT_EGG_COOLDOWN_SECONDS,
         adopt_egg_ready_at=player.adopt_egg_ready_at,

@@ -15,6 +15,8 @@
 - `ADOPT_PREMIUM_AURA_ACTIVE_CHANCE` to tune premium aura activation (default 0.7).
 - `ADOPT_PREMIUM_SHINY_CHANCE` to tune premium shiny chance (default 0.15).
 - `REVEAL_AURA_COST` to set hidden aura reveal cost (default 8).
+- `REVEAL_EYE_COLOR_COST` to set hidden eye color reveal cost (default 6).
+- `REVEAL_ACCESSORY_COST` to set hidden accessory reveal cost (default 6).
 - `SELL_PRICE_COMMON`, `SELL_PRICE_UNCOMMON`, `SELL_PRICE_RARE`, `SELL_PRICE_EPIC`, `SELL_PRICE_LEGENDARY` to tune sell payouts.
 
 ## Setup
@@ -37,3 +39,4 @@ uvicorn app.main:app --reload
 - `POST /adopt-egg-premium` creates a premium egg (higher rare odds).
 - `/state` includes shop costs plus adopt-egg settings and cooldown timestamp.
 - If you see `no such column: players.adopt_egg_ready_at` or `players.adopt_premium_egg_ready_at`, delete `backend/pets.db` and restart.
+- Migrations are not run automatically; delete `backend/pets.db` to rebuild schema changes.

@@ -22,17 +22,19 @@ export default function ShopPanel({
   premiumHighlight,
   sellPrices,
   revealAuraCost,
+  revealEyeColorCost,
+  revealAccessoryCost,
   onRefreshEmotion,
   onInstantHatch,
   onAdoptEgg,
   onAdoptPremiumEgg,
-  onRevealAura,
+  onRevealHidden,
   onSellPet,
   busy,
   error,
   adoptError,
   premiumAdoptError,
-  revealAuraError,
+  revealHiddenError,
   sellError,
   labels
 }: {
@@ -55,17 +57,19 @@ export default function ShopPanel({
   premiumHighlight: boolean;
   sellPrices: Record<string, number>;
   revealAuraCost: number;
+  revealEyeColorCost: number;
+  revealAccessoryCost: number;
   onRefreshEmotion: (petId: number) => void;
   onInstantHatch: (eggId: number) => void;
   onAdoptEgg: () => void;
   onAdoptPremiumEgg: () => void;
-  onRevealAura: (petId: number) => void;
+  onRevealHidden: (petId: number, locus: "Aura" | "EyeColor" | "Accessory") => void;
   onSellPet: (petId: number) => void;
   busy: boolean;
   error: string | null;
   adoptError: string | null;
   premiumAdoptError: string | null;
-  revealAuraError: string | null;
+  revealHiddenError: string | null;
   sellError: string | null;
   labels: {
     title: string;
@@ -99,10 +103,13 @@ export default function ShopPanel({
     premium: string;
     premiumBadge: string;
     premiumAction: string;
+    revealHidden: string;
+    revealHiddenBadge: string;
+    revealHiddenAction: string;
+    revealHiddenHint: string;
     revealAura: string;
-    revealAuraBadge: string;
-    revealAuraAction: string;
-    revealAuraHint: string;
+    revealEyeColor: string;
+    revealAccessory: string;
   };
 }) {
   const incubating = eggs.filter((egg) => egg.status === "Incubating");
@@ -110,6 +117,9 @@ export default function ShopPanel({
   const [selectedEggId, setSelectedEggId] = useState<number | null>(null);
   const [selectedSellPetId, setSelectedSellPetId] = useState<number | null>(null);
   const [selectedRevealPetId, setSelectedRevealPetId] = useState<number | null>(null);
+  const [selectedRevealLocus, setSelectedRevealLocus] = useState<
+    "Aura" | "EyeColor" | "Accessory"
+  >("Aura");
   const [confirmSellPetId, setConfirmSellPetId] = useState<number | null>(null);
   const hasGold = gold >= adoptPrice;
   const canAdopt = hasGold && adoptRemainingSeconds === 0;
@@ -123,7 +133,13 @@ export default function ShopPanel({
   const sellPrice = sellPet ? sellPrices[sellPet.rarity_tier] ?? 0 : 0;
   const confirmPet = pets.find((pet) => pet.id === confirmSellPetId);
   const confirmPrice = confirmPet ? sellPrices[confirmPet.rarity_tier] ?? 0 : 0;
-  const hasRevealGold = gold >= revealAuraCost;
+  const revealCost =
+    selectedRevealLocus === "Aura"
+      ? revealAuraCost
+      : selectedRevealLocus === "EyeColor"
+        ? revealEyeColorCost
+        : revealAccessoryCost;
+  const hasRevealGold = gold >= revealCost;
 
   return (
     <section className="rounded-3xl border border-ink/10 bg-white/80 p-6 shadow-md">
@@ -348,12 +364,23 @@ export default function ShopPanel({
 
         <div className="rounded-2xl border border-ink/10 bg-white/70 p-3">
           <div className="flex items-center gap-2">
-            <p className="font-semibold">{labels.revealAura}</p>
+            <p className="font-semibold">{labels.revealHidden}</p>
             <span className="rounded-full bg-iris px-2 py-0.5 text-[10px] font-semibold text-white">
-              {labels.revealAuraBadge}
+              {labels.revealHiddenBadge}
             </span>
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-2">
+            <select
+              className="rounded-full border border-ink/20 bg-white px-3 py-1 text-xs"
+              value={selectedRevealLocus}
+              onChange={(event) =>
+                setSelectedRevealLocus(event.target.value as "Aura" | "EyeColor" | "Accessory")
+              }
+            >
+              <option value="Aura">{labels.revealAura}</option>
+              <option value="EyeColor">{labels.revealEyeColor}</option>
+              <option value="Accessory">{labels.revealAccessory}</option>
+            </select>
             <select
               className="rounded-full border border-ink/20 bg-white px-3 py-1 text-xs"
               value={selectedRevealPetId ?? ""}
@@ -370,22 +397,24 @@ export default function ShopPanel({
               ))}
             </select>
             <span className="text-xs text-ink/60">
-              {labels.cost}: {revealAuraCost}
+              {labels.cost}: {revealCost}
             </span>
             <button
               className="rounded-full border border-ink/20 px-3 py-1 text-xs font-semibold"
               disabled={busy || !selectedRevealPetId || !hasRevealGold}
-              onClick={() => selectedRevealPetId && onRevealAura(selectedRevealPetId)}
+              onClick={() =>
+                selectedRevealPetId && onRevealHidden(selectedRevealPetId, selectedRevealLocus)
+              }
             >
-              {labels.revealAuraAction}
+              {labels.revealHiddenAction}
             </button>
             {!hasRevealGold ? (
               <span className="text-xs text-ember">{labels.insufficientGold}</span>
             ) : null}
           </div>
-          <p className="mt-2 text-xs text-ink/60">{labels.revealAuraHint}</p>
-          {revealAuraError ? (
-            <p className="mt-2 text-xs text-ember">{revealAuraError}</p>
+          <p className="mt-2 text-xs text-ink/60">{labels.revealHiddenHint}</p>
+          {revealHiddenError ? (
+            <p className="mt-2 text-xs text-ember">{revealHiddenError}</p>
           ) : null}
         </div>
 

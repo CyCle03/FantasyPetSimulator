@@ -28,6 +28,13 @@ router = APIRouter(prefix="/shop", tags=["shop"])
 EMOTION_REFRESH_COST = 10
 INSTANT_HATCH_COST = 15
 REVEAL_AURA_COST = int(os.getenv("REVEAL_AURA_COST", "8"))
+REVEAL_EYE_COLOR_COST = int(os.getenv("REVEAL_EYE_COLOR_COST", "6"))
+REVEAL_ACCESSORY_COST = int(os.getenv("REVEAL_ACCESSORY_COST", "6"))
+REVEAL_COSTS = {
+    "Aura": REVEAL_AURA_COST,
+    "EyeColor": REVEAL_EYE_COLOR_COST,
+    "Accessory": REVEAL_ACCESSORY_COST,
+}
 SELL_PRICES = {
     "Common": int(os.getenv("SELL_PRICE_COMMON", "5")),
     "Uncommon": int(os.getenv("SELL_PRICE_UNCOMMON", "10")),
@@ -133,10 +140,14 @@ def sell_pet(payload: ShopSellIn, db: Session = Depends(get_db)):
     return ShopSellOut(ok=True, gold=player.gold, payout=payout)
 
 
-@router.post("/reveal-aura", response_model=ShopRevealOut)
-def reveal_aura(payload: ShopRevealIn, db: Session = Depends(get_db)):
+@router.post("/reveal", response_model=ShopRevealOut)
+def reveal_hidden(payload: ShopRevealIn, db: Session = Depends(get_db)):
+    locus = payload.locus or "Aura"
+    if locus not in REVEAL_COSTS:
+        raise HTTPException(status_code=400, detail="Invalid locus.")
     player = _get_player(db)
-    if player.gold < REVEAL_AURA_COST:
+    cost = REVEAL_COSTS[locus]
+    if player.gold < cost:
         raise HTTPException(status_code=400, detail="Not enough gold.")
 
     pet = db.query(Pet).filter(Pet.id == payload.pet_id).first()
@@ -144,12 +155,12 @@ def reveal_aura(payload: ShopRevealIn, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Pet not found.")
 
     hidden = list(pet.hidden_loci_json or [])
-    if "Aura" not in hidden:
-        return ShopRevealOut(ok=True, gold=player.gold, revealed=False)
+    if locus not in hidden:
+        return ShopRevealOut(ok=True, gold=player.gold, revealed=False, locus=locus)
 
-    hidden.remove("Aura")
+    hidden.remove(locus)
     pet.hidden_loci_json = hidden
-    player.gold -= REVEAL_AURA_COST
+    player.gold -= cost
     db.commit()
 
-    return ShopRevealOut(ok=True, gold=player.gold, revealed=True)
+    return ShopRevealOut(ok=True, gold=player.gold, revealed=True, locus=locus)
