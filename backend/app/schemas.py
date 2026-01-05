@@ -44,6 +44,8 @@ class StateOut(BaseModel):
     eggs: list[EggOut]
     server_time: datetime
     gold: int
+    emotion_refresh_cost: int
+    instant_hatch_cost: int
     adopt_egg_cost: int
     adopt_egg_cooldown_seconds: int
     adopt_egg_ready_at: datetime | None

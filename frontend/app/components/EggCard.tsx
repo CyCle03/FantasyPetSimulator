@@ -34,6 +34,7 @@ export default function EggCard({
 
   return (
     <div
+      data-egg-id={egg.id}
       className={`rounded-2xl border-2 border-amber-300 bg-white/80 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
         highlight ? "egg-highlight" : ""
       }`}

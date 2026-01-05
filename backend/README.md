@@ -27,5 +27,5 @@ uvicorn app.main:app --reload
 - `/reset` is available only when `ENV=development` or `ENV=dev` (default).
 - Eggs do not auto-hatch; use `/hatch` or `/hatch-all`.
 - `POST /adopt-egg` creates a new random egg (12 Gold, 5m cooldown).
-- `/state` includes adopt-egg settings and cooldown timestamp.
+- `/state` includes shop costs plus adopt-egg settings and cooldown timestamp.
 - If you see `no such column: players.adopt_egg_ready_at`, delete `backend/pets.db` and restart.

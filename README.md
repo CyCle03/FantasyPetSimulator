@@ -95,7 +95,7 @@ Environment variables:
 5) (Optional) `NEXT_PUBLIC_ENABLE_MARKET=true`
 
 ## API Endpoints
-- `GET /state`: Returns pets, eggs, gold, server time, and adopt-egg settings.
+- `GET /state`: Returns pets, eggs, gold, server time, and shop/adopt settings.
 - `POST /breed`: `{ parentAId, parentBId }` creates a new egg.
 - `POST /hatch`: `{ eggId }` hatch if ready.
 - `POST /hatch-all`: Hatch all ready eggs.
@@ -214,7 +214,7 @@ npm run dev
 5) (선택) `NEXT_PUBLIC_ENABLE_MARKET=true`
 
 ## API 엔드포인트
-- `GET /state`: 펫/알/골드/서버 시간 + 알 입양 설정 반환.
+- `GET /state`: 펫/알/골드/서버 시간 + 상점/알 입양 설정 반환.
 - `POST /breed`: `{ parentAId, parentBId }`로 알 생성.
 - `POST /hatch`: `{ eggId }` 부화(준비된 알만).
 - `POST /hatch-all`: 준비된 알을 모두 부화.

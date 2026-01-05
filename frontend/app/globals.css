@@ -116,3 +116,19 @@ body {
   animation: adopt-glow 1.4s ease-out;
   border-color: rgba(251, 146, 60, 0.35);
 }
+
+@keyframes adopt-ready {
+  0% {
+    box-shadow: 0 0 0 0 rgba(251, 146, 60, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(251, 146, 60, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(251, 146, 60, 0);
+  }
+}
+
+.adopt-ready {
+  animation: adopt-ready 1.6s ease-out infinite;
+}

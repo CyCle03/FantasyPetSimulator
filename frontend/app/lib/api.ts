@@ -26,6 +26,8 @@ export type State = {
   eggs: Egg[];
   server_time: string;
   gold: number;
+  emotion_refresh_cost: number;
+  instant_hatch_cost: number;
   adopt_egg_cost: number;
   adopt_egg_cooldown_seconds: number;
   adopt_egg_ready_at: string | null;

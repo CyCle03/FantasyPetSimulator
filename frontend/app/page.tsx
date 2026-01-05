@@ -50,6 +50,8 @@ export default function Home() {
   const [adoptEggCost, setAdoptEggCost] = useState(12);
   const [adoptEggCooldownSeconds, setAdoptEggCooldownSeconds] = useState(300);
   const [adoptEggReadyAt, setAdoptEggReadyAt] = useState<string | null>(null);
+  const [emotionRefreshCost, setEmotionRefreshCost] = useState(10);
+  const [instantHatchCost, setInstantHatchCost] = useState(15);
   const prevPetIds = useRef<Set<number>>(new Set());
   const hasInitializedPets = useRef(false);
   const prevEggIds = useRef<Set<number>>(new Set());
@@ -133,14 +135,19 @@ export default function Home() {
         cost: "Cost",
         cooldown: "Cooldown",
         status: "Status",
-        insufficientGold: "Not enough gold."
+        insufficientGold: "Not enough gold.",
+        readyBadge: "READY",
+        moodBadge: "MOOD",
+        hatchBadge: "FAST",
+        adoptBadge: "NEW"
       },
       ui: {
         showMore: "Show more",
         total: "total",
         rareHatch: "Rare Hatch",
         hatchAll: "Hatch all ready",
-        toastAdopted: "A new egg is incubating!"
+        toastAdopted: "A new egg is incubating!",
+        toastAdoptReady: "Egg adoption is ready."
       }
     },
     ko: {
@@ -216,19 +223,26 @@ export default function Home() {
         cost: "가격",
         cooldown: "쿨타임",
         status: "상태",
-        insufficientGold: "골드가 부족합니다."
+        insufficientGold: "골드가 부족합니다.",
+        readyBadge: "가능",
+        moodBadge: "기분",
+        hatchBadge: "즉시",
+        adoptBadge: "신규"
       },
       ui: {
         showMore: "더 보기",
         total: "총",
         rareHatch: "희귀 부화",
         hatchAll: "준비된 알 모두 부화",
-        toastAdopted: "새 알이 부화 중입니다!"
+        toastAdopted: "새 알이 부화 중입니다!",
+        toastAdoptReady: "알 입양이 가능해졌습니다."
       }
     }
   } as const;
 
   const text = copy[lang];
+  const adoptRemainingSeconds = getAdoptRemainingSeconds(adoptEggReadyAt, now);
+  const prevAdoptRemaining = useRef<number>(adoptRemainingSeconds);
 
   const refresh = async () => {
     const state = await getState();
@@ -248,6 +262,8 @@ export default function Home() {
     const serverTime = new Date(state.server_time).getTime();
     setTimeOffsetMs(serverTime - Date.now());
     setGold(state.gold ?? 0);
+    setEmotionRefreshCost(state.emotion_refresh_cost ?? 10);
+    setInstantHatchCost(state.instant_hatch_cost ?? 15);
     setAdoptEggCost(state.adopt_egg_cost ?? adoptEggCostFallback);
     setAdoptEggCooldownSeconds(
       state.adopt_egg_cooldown_seconds ?? adoptEggCooldownMinutesFallback * 60
@@ -308,6 +324,23 @@ export default function Home() {
     if (!highlightEggId) return;
     const timer = setTimeout(() => setHighlightEggId(null), 2500);
     return () => clearTimeout(timer);
+  }, [highlightEggId]);
+
+  useEffect(() => {
+    const prev = prevAdoptRemaining.current;
+    if (prev > 0 && adoptRemainingSeconds === 0) {
+      setToast(text.ui.toastAdoptReady);
+      setAdoptHighlight(true);
+    }
+    prevAdoptRemaining.current = adoptRemainingSeconds;
+  }, [adoptRemainingSeconds, text.ui.toastAdoptReady]);
+
+  useEffect(() => {
+    if (!highlightEggId) return;
+    const target = document.querySelector(`[data-egg-id="${highlightEggId}"]`);
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
   }, [highlightEggId]);
 
   const selectedPets = useMemo(
@@ -675,12 +708,12 @@ export default function Home() {
               pets={pets}
               eggs={eggs}
               gold={gold}
-              emotionPrice={10}
-              hatchPrice={15}
+              emotionPrice={emotionRefreshCost}
+              hatchPrice={instantHatchCost}
               adoptPrice={adoptEggCost}
               adoptCooldownMinutes={Math.max(1, Math.ceil(adoptEggCooldownSeconds / 60))}
               adoptCooldownSeconds={adoptEggCooldownSeconds}
-              adoptRemainingSeconds={getAdoptRemainingSeconds(adoptEggReadyAt, now)}
+              adoptRemainingSeconds={adoptRemainingSeconds}
               adoptStatusText={getAdoptStatusText(adoptEggReadyAt, now, lang)}
               adoptHighlight={adoptHighlight}
               onRefreshEmotion={handleRefreshEmotion}

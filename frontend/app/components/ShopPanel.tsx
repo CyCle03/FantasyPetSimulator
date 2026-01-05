@@ -54,12 +54,17 @@ export default function ShopPanel({
     cooldown: string;
     status: string;
     insufficientGold: string;
+    readyBadge: string;
+    moodBadge: string;
+    hatchBadge: string;
+    adoptBadge: string;
   };
 }) {
   const incubating = eggs.filter((egg) => egg.status === "Incubating");
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const [selectedEggId, setSelectedEggId] = useState<number | null>(null);
-  const canAdopt = gold >= adoptPrice && adoptRemainingSeconds === 0;
+  const hasGold = gold >= adoptPrice;
+  const canAdopt = hasGold && adoptRemainingSeconds === 0;
   const totalCooldown = Math.max(1, adoptCooldownSeconds);
   const progress = Math.min(1, 1 - adoptRemainingSeconds / totalCooldown);
 
@@ -74,7 +79,12 @@ export default function ShopPanel({
 
       <div className="mt-4 space-y-4 text-sm text-ink/80">
         <div className="rounded-2xl border border-ink/10 bg-white/70 p-3">
-          <p className="font-semibold">{labels.emotion}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-semibold">{labels.emotion}</p>
+            <span className="rounded-full bg-sky px-2 py-0.5 text-[10px] font-semibold text-white">
+              {labels.moodBadge}
+            </span>
+          </div>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <select
               className="rounded-full border border-ink/20 bg-white px-3 py-1 text-xs"
@@ -105,7 +115,12 @@ export default function ShopPanel({
         </div>
 
         <div className="rounded-2xl border border-ink/10 bg-white/70 p-3">
-          <p className="font-semibold">{labels.hatch}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-semibold">{labels.hatch}</p>
+            <span className="rounded-full bg-ember px-2 py-0.5 text-[10px] font-semibold text-white">
+              {labels.hatchBadge}
+            </span>
+          </div>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <select
               className="rounded-full border border-ink/20 bg-white px-3 py-1 text-xs"
@@ -140,7 +155,17 @@ export default function ShopPanel({
             adoptHighlight ? "adopt-highlight" : ""
           }`}
         >
-          <p className="font-semibold">{labels.adopt}</p>
+          <div className="flex items-center gap-2">
+            <p className="font-semibold">{labels.adopt}</p>
+            <span className="rounded-full bg-amber-300 px-2 py-0.5 text-[10px] font-semibold text-ink">
+              {labels.adoptBadge}
+            </span>
+            {adoptRemainingSeconds === 0 ? (
+              <span className="rounded-full bg-moss px-2 py-0.5 text-[10px] font-semibold text-white">
+                {labels.readyBadge}
+              </span>
+            ) : null}
+          </div>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <span className="text-xs text-ink/60">
               {labels.cost}: {adoptPrice}
@@ -152,13 +177,15 @@ export default function ShopPanel({
               {labels.status}: {adoptStatusText}
             </span>
             <button
-              className="rounded-full border border-ink/20 px-3 py-1 text-xs font-semibold"
+              className={`rounded-full border border-ink/20 px-3 py-1 text-xs font-semibold ${
+                adoptRemainingSeconds === 0 ? "adopt-ready" : ""
+              }`}
               disabled={busy || !canAdopt}
               onClick={onAdoptEgg}
             >
               {labels.adoptAction}
             </button>
-            {!canAdopt ? (
+            {!hasGold ? (
               <span className="text-xs text-ember">{labels.insufficientGold}</span>
             ) : null}
           </div>
