@@ -23,6 +23,7 @@ def seed_db(db: Session) -> None:
     rng = random.Random()
     for _ in range(2):
         genome = random_genome(rng)
+        genome["Aura"] = ["None", "None"]
         phenotype = genome_to_phenotype(genome)
         score, tier, tags = rarity_profile(phenotype)
         hidden_loci = choose_hidden_loci(rng)
