@@ -79,6 +79,12 @@ export function hatchAll(): Promise<Egg[]> {
   });
 }
 
+export function adoptEgg(): Promise<Egg> {
+  return request<Egg>("/adopt-egg", {
+    method: "POST"
+  });
+}
+
 export function reset(): Promise<{ ok: boolean }> {
   return request<{ ok: boolean }>("/reset", {
     method: "POST"

@@ -11,11 +11,13 @@ export default function EggCard({
   egg,
   now,
   onHatch,
+  highlight,
   labels
 }: {
   egg: Egg;
   now: number;
   onHatch: (id: number) => void;
+  highlight?: boolean;
   labels: {
     ready: string;
     incubating: string;
@@ -31,7 +33,11 @@ export default function EggCard({
   const hatched = egg.status !== "Incubating";
 
   return (
-    <div className="rounded-2xl border-2 border-amber-300 bg-white/80 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+    <div
+      className={`rounded-2xl border-2 border-amber-300 bg-white/80 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+        highlight ? "egg-highlight" : ""
+      }`}
+    >
       <div className="flex items-start justify-between">
         <div>
           <h3 className="text-lg font-semibold">Egg #{egg.id}</h3>

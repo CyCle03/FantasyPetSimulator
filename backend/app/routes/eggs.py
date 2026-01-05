@@ -1,20 +1,23 @@
 from __future__ import annotations
 
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..genetics.emotions import pick_emotion
-from ..genetics.genome import choose_hidden_loci
+from ..genetics.genome import choose_hidden_loci, random_genome
 from ..genetics.phenotype import genome_to_phenotype
 from ..genetics.rarity import hatch_reward, rarity_profile
 from ..models import Egg, Pet, Player
 from ..schemas import EggOut, HatchIn
 
 router = APIRouter()
+EGG_HATCH_SECONDS = 60
+ADOPT_EGG_COST = 12
+ADOPT_COOLDOWN = timedelta(minutes=5)
 
 
 def _create_pet_from_genome(db: Session, genome: dict) -> Pet:
@@ -112,3 +115,38 @@ def hatch_all_eggs(db: Session = Depends(get_db)):
         )
         for egg in eggs_ready
     ]
+
+
+@router.post("/adopt-egg", response_model=EggOut)
+def adopt_egg(db: Session = Depends(get_db)):
+    now = datetime.utcnow()
+    player = _get_player(db)
+    if player.gold < ADOPT_EGG_COST:
+        raise HTTPException(status_code=400, detail="Not enough gold.")
+    if player.adopt_egg_ready_at and player.adopt_egg_ready_at > now:
+        remaining = int((player.adopt_egg_ready_at - now).total_seconds())
+        raise HTTPException(
+            status_code=400,
+            detail=f"Adoption cooldown. Try again in {remaining}s.",
+        )
+
+    player.gold -= ADOPT_EGG_COST
+    player.adopt_egg_ready_at = now + ADOPT_COOLDOWN
+    rng = random.Random()
+    genome = random_genome(rng)
+    egg = Egg(
+        hatch_at=now + timedelta(seconds=EGG_HATCH_SECONDS),
+        genome_json=genome,
+        status="Incubating",
+    )
+    db.add(egg)
+    db.commit()
+    db.refresh(egg)
+    return EggOut(
+        id=egg.id,
+        created_at=egg.created_at,
+        hatch_at=egg.hatch_at,
+        genome=egg.genome_json,
+        status=egg.status,
+        hatched_pet_id=egg.hatched_pet_id,
+    )

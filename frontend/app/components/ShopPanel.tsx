@@ -8,8 +8,11 @@ export default function ShopPanel({
   gold,
   emotionPrice,
   hatchPrice,
+  adoptPrice,
+  adoptCooldownMinutes,
   onRefreshEmotion,
   onInstantHatch,
+  onAdoptEgg,
   busy,
   error,
   labels
@@ -19,8 +22,11 @@ export default function ShopPanel({
   gold: number;
   emotionPrice: number;
   hatchPrice: number;
+  adoptPrice: number;
+  adoptCooldownMinutes: number;
   onRefreshEmotion: (petId: number) => void;
   onInstantHatch: (eggId: number) => void;
+  onAdoptEgg: () => void;
   busy: boolean;
   error: string | null;
   labels: {
@@ -28,11 +34,14 @@ export default function ShopPanel({
     gold: string;
     emotion: string;
     hatch: string;
+    adopt: string;
     selectPet: string;
     selectEgg: string;
     refresh: string;
     instant: string;
+    adoptAction: string;
     cost: string;
+    cooldown: string;
   };
 }) {
   const incubating = eggs.filter((egg) => egg.status === "Incubating");
@@ -107,6 +116,25 @@ export default function ShopPanel({
               onClick={() => selectedEggId && onInstantHatch(selectedEggId)}
             >
               {labels.instant}
+            </button>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-ink/10 bg-white/70 p-3">
+          <p className="font-semibold">{labels.adopt}</p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span className="text-xs text-ink/60">
+              {labels.cost}: {adoptPrice}
+            </span>
+            <span className="text-xs text-ink/60">
+              {labels.cooldown}: {adoptCooldownMinutes}m
+            </span>
+            <button
+              className="rounded-full border border-ink/20 px-3 py-1 text-xs font-semibold"
+              disabled={busy}
+              onClick={onAdoptEgg}
+            >
+              {labels.adoptAction}
             </button>
           </div>
         </div>

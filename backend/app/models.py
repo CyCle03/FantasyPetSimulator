@@ -32,6 +32,7 @@ class Player(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     gold: Mapped[int] = mapped_column(Integer, default=0)
+    adopt_egg_ready_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
 class Egg(Base):

@@ -17,6 +17,7 @@ import {
   getState,
   hatch,
   hatchAll,
+  adoptEgg,
   instantHatch,
   refreshEmotion,
   reset,
@@ -42,9 +43,15 @@ export default function Home() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [listingPetId, setListingPetId] = useState<number | null>(null);
   const [listingPrice, setListingPrice] = useState("");
+  const [toast, setToast] = useState<string | null>(null);
+  const [highlightEggId, setHighlightEggId] = useState<number | null>(null);
   const prevPetIds = useRef<Set<number>>(new Set());
   const hasInitializedPets = useRef(false);
+  const prevEggIds = useRef<Set<number>>(new Set());
+  const hasInitializedEggs = useRef(false);
   const marketEnabled = process.env.NEXT_PUBLIC_ENABLE_MARKET === "true";
+  const adoptEggCost = 12;
+  const adoptEggCooldownMinutes = 5;
 
   const copy = {
     en: {
@@ -112,17 +119,21 @@ export default function Home() {
         gold: "Gold",
         emotion: "Refresh Emotion",
         hatch: "Instant Hatch",
+        adopt: "Adopt Egg",
         selectPet: "Choose pet",
         selectEgg: "Choose egg",
         refresh: "Refresh",
         instant: "Hatch now",
-        cost: "Cost"
+        adoptAction: "Adopt",
+        cost: "Cost",
+        cooldown: "Cooldown"
       },
       ui: {
         showMore: "Show more",
         total: "total",
         rareHatch: "Rare Hatch",
-        hatchAll: "Hatch all ready"
+        hatchAll: "Hatch all ready",
+        toastAdopted: "A new egg is incubating!"
       }
     },
     ko: {
@@ -189,17 +200,21 @@ export default function Home() {
         gold: "골드",
         emotion: "감정 리롤",
         hatch: "즉시 부화",
+        adopt: "알 입양",
         selectPet: "펫 선택",
         selectEgg: "알 선택",
         refresh: "리롤",
         instant: "지금 부화",
-        cost: "가격"
+        adoptAction: "입양",
+        cost: "가격",
+        cooldown: "쿨타임"
       },
       ui: {
         showMore: "더 보기",
         total: "총",
         rareHatch: "희귀 부화",
-        hatchAll: "준비된 알 모두 부화"
+        hatchAll: "준비된 알 모두 부화",
+        toastAdopted: "새 알이 부화 중입니다!"
       }
     }
   } as const;
@@ -210,6 +225,17 @@ export default function Home() {
     const state = await getState();
     setPets(state.pets);
     setEggs(state.eggs);
+    if (!hasInitializedEggs.current) {
+      prevEggIds.current = new Set(state.eggs.map((egg) => egg.id));
+      hasInitializedEggs.current = true;
+    } else {
+      const nextIds = new Set(state.eggs.map((egg) => egg.id));
+      const newEgg = state.eggs.find((egg) => !prevEggIds.current.has(egg.id));
+      prevEggIds.current = nextIds;
+      if (newEgg) {
+        setHighlightEggId(newEgg.id);
+      }
+    }
     const serverTime = new Date(state.server_time).getTime();
     setTimeOffsetMs(serverTime - Date.now());
     setGold(state.gold ?? 0);
@@ -251,6 +277,18 @@ export default function Home() {
     const timer = setTimeout(() => setRareReveal(null), 2400);
     return () => clearTimeout(timer);
   }, [rareReveal]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 2200);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
+  useEffect(() => {
+    if (!highlightEggId) return;
+    const timer = setTimeout(() => setHighlightEggId(null), 2500);
+    return () => clearTimeout(timer);
+  }, [highlightEggId]);
 
   const selectedPets = useMemo(
     () => pets.filter((pet) => selected.includes(pet.id)),
@@ -324,6 +362,20 @@ export default function Home() {
       await refresh();
     } catch (err: any) {
       setError(err.message || "Hatch all failed.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleAdoptEgg = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await adoptEgg();
+      await refresh();
+      setToast(text.ui.toastAdopted);
+    } catch (err: any) {
+      setError(err.message || "Adopt egg failed.");
     } finally {
       setBusy(false);
     }
@@ -601,8 +653,11 @@ export default function Home() {
               gold={gold}
               emotionPrice={10}
               hatchPrice={15}
+              adoptPrice={adoptEggCost}
+              adoptCooldownMinutes={adoptEggCooldownMinutes}
               onRefreshEmotion={handleRefreshEmotion}
               onInstantHatch={handleInstantHatch}
+              onAdoptEgg={handleAdoptEgg}
               busy={busy}
               error={error}
               labels={text.shop}
@@ -630,6 +685,11 @@ export default function Home() {
               </button>
             </div>
           </div>
+          {toast ? (
+            <div className="mt-3 inline-flex items-center rounded-full border border-moss/30 bg-white/90 px-4 py-1 text-xs font-semibold text-moss">
+              {toast}
+            </div>
+          ) : null}
           <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {incubatingEggs.map((egg) => (
               <EggCard
@@ -637,6 +697,7 @@ export default function Home() {
                 egg={egg}
                 now={now}
                 onHatch={handleHatch}
+                highlight={egg.id === highlightEggId}
                 labels={text.eggCard}
               />
             ))}

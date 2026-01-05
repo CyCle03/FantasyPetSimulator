@@ -48,10 +48,11 @@ Environment variables:
 - Genetics are always calculated server-side.
 - Breeding cooldown is 10 minutes per parent.
 - Egg hatch time is 60 seconds; eggs do not auto-hatch.
+- You can generate a fresh egg via `/adopt-egg` (costs 12 Gold, 5m cooldown).
 - Emotions refresh every 10 minutes on `/state` or via the shop.
 - Per-locus mutation starts at 10% and is tuned by element clashes and rarity stabilization.
 - Extra rare mutation: 0.2% chance to force a rare Aura/Accessory/EyeColor.
-- Hatch rewards grant Gold; shop costs 10 Gold (emotion refresh) and 15 Gold (instant hatch).
+- Hatch rewards grant Gold; shop costs 10 Gold (emotion refresh), 15 Gold (instant hatch), and 12 Gold (adopt egg).
 - Rarity tiers are server-calculated using part synergy rules.
 - `BREEDING_MUTATION_MULTIPLIER` scales mutation chances.
 
@@ -94,6 +95,7 @@ Environment variables:
 - `POST /breed`: `{ parentAId, parentBId }` creates a new egg.
 - `POST /hatch`: `{ eggId }` hatch if ready.
 - `POST /hatch-all`: Hatch all ready eggs.
+- `POST /adopt-egg`: Create a new random egg.
 - `POST /reset`: Dev-only DB reset (requires `ENV=development` or `ENV=dev`).
 - `POST /shop/refresh-emotion`: `{ petId }` reroll emotion (costs Gold).
 - `POST /shop/instant-hatch`: `{ eggId }` instantly hatch an egg (costs Gold).
@@ -161,10 +163,11 @@ npm run dev
 - 유전 계산은 항상 서버에서 수행.
 - 교배 쿨타임은 부모당 10분.
 - 알 부화 시간은 60초이며, 자동 부화되지 않습니다.
+- `/adopt-egg`로 새로운 알을 생성할 수 있습니다(12 골드, 5분 쿨타임).
 - 감정은 `/state` 호출 시 10분 쿨타임마다 갱신되며, 상점에서도 리롤 가능.
 - 로커스별 돌연변이 확률은 기본 10%이며, 상성/희귀도 보정이 적용됩니다.
 - 추가 희귀 돌연변이: Aura/Accessory/EyeColor 0.2% 강제 희귀 치환.
-- 부화 보상으로 골드를 획득하며, 상점 비용은 10(감정 리롤), 15(즉시 부화)입니다.
+- 부화 보상으로 골드를 획득하며, 상점 비용은 10(감정 리롤), 15(즉시 부화), 12(알 입양)입니다.
 - 희귀도 등급은 서버 시너지 규칙으로 계산.
 - `BREEDING_MUTATION_MULTIPLIER`로 돌연변이 확률을 조정할 수 있습니다.
 
@@ -207,6 +210,7 @@ npm run dev
 - `POST /breed`: `{ parentAId, parentBId }`로 알 생성.
 - `POST /hatch`: `{ eggId }` 부화(준비된 알만).
 - `POST /hatch-all`: 준비된 알을 모두 부화.
+- `POST /adopt-egg`: 랜덤 알 생성.
 - `POST /reset`: 개발 환경 전용 DB 초기화(`ENV=development` 또는 `ENV=dev` 필요).
 - `POST /shop/refresh-emotion`: `{ petId }` 감정 리롤(골드 소모).
 - `POST /shop/instant-hatch`: `{ eggId }` 즉시 부화(골드 소모).
