@@ -49,13 +49,17 @@ Environment variables:
 - Breeding cooldown is 10 minutes per parent.
 - Egg hatch time is 60 seconds; eggs do not auto-hatch.
 - You can generate a fresh egg via `/adopt-egg` (defaults: 12 Gold, 5m cooldown).
+- Premium adopt (`/adopt-egg-premium`) costs more but boosts rare traits.
 - Emotions refresh every 10 minutes on `/state` or via the shop.
 - Per-locus mutation starts at 10% and is tuned by element clashes and rarity stabilization.
 - Extra rare mutation: 0.2% chance to force a rare Aura/Accessory/EyeColor.
 - Hatch rewards grant Gold; shop costs default to 10 (emotion refresh), 15 (instant hatch), and 12 (adopt egg).
+- Sell payouts default to 5/10/20/40/80 for Common→Legendary.
 - Rarity tiers are server-calculated using part synergy rules.
 - `BREEDING_MUTATION_MULTIPLIER` scales mutation chances.
 - `ADOPT_EGG_COST` and `ADOPT_EGG_COOLDOWN_SECONDS` tune adopt pricing and cooldown.
+- `SELL_PRICE_COMMON`, `SELL_PRICE_UNCOMMON`, `SELL_PRICE_RARE`, `SELL_PRICE_EPIC`, `SELL_PRICE_LEGENDARY` tune sell payouts.
+- `ADOPT_PREMIUM_EGG_COST`, `ADOPT_PREMIUM_EGG_COOLDOWN_SECONDS`, `ADOPT_PREMIUM_RARE_CHANCE`, `ADOPT_PREMIUM_AURA_ACTIVE_CHANCE`, `ADOPT_PREMIUM_SHINY_CHANCE` tune premium adopt.
 
 ## PNG Parts & Design
 - Sample parts are under `frontend/public/parts/{Locus}/{Value}.png`.
@@ -72,7 +76,7 @@ Environment variables:
 - Use the language dropdown in the header to switch between English and Korean.
 
 ## Troubleshooting
-- If you see `no such column: players.adopt_egg_ready_at`, delete `backend/pets.db` and restart.
+- If you see `no such column: players.adopt_egg_ready_at` or `players.adopt_premium_egg_ready_at`, delete `backend/pets.db` and restart.
 
 ## Market (Experimental)
 - Enable backend: `ENABLE_MARKET=true`
@@ -100,6 +104,7 @@ Environment variables:
 - `POST /hatch`: `{ eggId }` hatch if ready.
 - `POST /hatch-all`: Hatch all ready eggs.
 - `POST /adopt-egg`: Create a new random egg.
+- `POST /adopt-egg-premium`: Create a premium egg (higher rare odds).
 - `POST /reset`: Dev-only DB reset (requires `ENV=development` or `ENV=dev`).
 - `POST /shop/refresh-emotion`: `{ petId }` reroll emotion (costs Gold).
 - `POST /shop/instant-hatch`: `{ eggId }` instantly hatch an egg (costs Gold).
@@ -169,13 +174,17 @@ npm run dev
 - 교배 쿨타임은 부모당 10분.
 - 알 부화 시간은 60초이며, 자동 부화되지 않습니다.
 - `/adopt-egg`로 새로운 알을 생성할 수 있습니다(기본값: 12 골드, 5분 쿨타임).
+- `/adopt-egg-premium`은 더 비싸지만 희귀 파츠 확률이 올라갑니다.
 - 감정은 `/state` 호출 시 10분 쿨타임마다 갱신되며, 상점에서도 리롤 가능.
 - 로커스별 돌연변이 확률은 기본 10%이며, 상성/희귀도 보정이 적용됩니다.
 - 추가 희귀 돌연변이: Aura/Accessory/EyeColor 0.2% 강제 희귀 치환.
 - 부화 보상으로 골드를 획득하며, 상점 비용 기본값은 10(감정 리롤), 15(즉시 부화), 12(알 입양)입니다.
+- 판매 보상 기본값은 Common→Legendary 기준 5/10/20/40/80입니다.
 - 희귀도 등급은 서버 시너지 규칙으로 계산.
 - `BREEDING_MUTATION_MULTIPLIER`로 돌연변이 확률을 조정할 수 있습니다.
 - `ADOPT_EGG_COST`, `ADOPT_EGG_COOLDOWN_SECONDS`로 알 입양 비용/쿨타임을 조정할 수 있습니다.
+- `SELL_PRICE_COMMON`, `SELL_PRICE_UNCOMMON`, `SELL_PRICE_RARE`, `SELL_PRICE_EPIC`, `SELL_PRICE_LEGENDARY`로 판매 보상을 조정할 수 있습니다.
+- `ADOPT_PREMIUM_EGG_COST`, `ADOPT_PREMIUM_EGG_COOLDOWN_SECONDS`, `ADOPT_PREMIUM_RARE_CHANCE`, `ADOPT_PREMIUM_AURA_ACTIVE_CHANCE`, `ADOPT_PREMIUM_SHINY_CHANCE`로 프리미엄 입양을 조정할 수 있습니다.
 
 ## PNG 파츠 & 디자인
 - 샘플 파츠는 `frontend/public/parts/{Locus}/{Value}.png`에 포함됩니다.
@@ -192,7 +201,7 @@ npm run dev
 - 상단 언어 선택 드롭다운에서 영어/한국어를 전환할 수 있습니다.
 
 ## 트러블슈팅
-- `no such column: players.adopt_egg_ready_at` 오류가 보이면 `backend/pets.db`를 삭제 후 재실행하세요.
+- `no such column: players.adopt_egg_ready_at` 또는 `players.adopt_premium_egg_ready_at` 오류가 보이면 `backend/pets.db`를 삭제 후 재실행하세요.
 
 ## 마켓 (실험)
 - 백엔드 활성화: `ENABLE_MARKET=true`
@@ -220,6 +229,7 @@ npm run dev
 - `POST /hatch`: `{ eggId }` 부화(준비된 알만).
 - `POST /hatch-all`: 준비된 알을 모두 부화.
 - `POST /adopt-egg`: 랜덤 알 생성.
+- `POST /adopt-egg-premium`: 프리미엄 알 생성(희귀 확률 증가).
 - `POST /reset`: 개발 환경 전용 DB 초기화(`ENV=development` 또는 `ENV=dev` 필요).
 - `POST /shop/refresh-emotion`: `{ petId }` 감정 리롤(골드 소모).
 - `POST /shop/instant-hatch`: `{ eggId }` 즉시 부화(골드 소모).

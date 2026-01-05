@@ -18,6 +18,7 @@ import {
   hatch,
   hatchAll,
   adoptEgg,
+  adoptPremiumEgg,
   sellPet,
   instantHatch,
   refreshEmotion,
@@ -55,6 +56,11 @@ export default function Home() {
   const [instantHatchCost, setInstantHatchCost] = useState(15);
   const [sellPrices, setSellPrices] = useState<Record<string, number>>({});
   const [sellError, setSellError] = useState<string | null>(null);
+  const [premiumEggCost, setPremiumEggCost] = useState(30);
+  const [premiumEggCooldownSeconds, setPremiumEggCooldownSeconds] = useState(600);
+  const [premiumEggReadyAt, setPremiumEggReadyAt] = useState<string | null>(null);
+  const [premiumAdoptError, setPremiumAdoptError] = useState<string | null>(null);
+  const [premiumHighlight, setPremiumHighlight] = useState(false);
   const prevPetIds = useRef<Set<number>>(new Set());
   const hasInitializedPets = useRef(false);
   const prevEggIds = useRef<Set<number>>(new Set());
@@ -130,6 +136,7 @@ export default function Home() {
         emotion: "Refresh Emotion",
         hatch: "Instant Hatch",
         adopt: "Adopt Egg",
+        premium: "Adopt Premium Egg",
         sell: "Sell Pet",
         selectPet: "Choose pet",
         selectEgg: "Choose egg",
@@ -137,6 +144,7 @@ export default function Home() {
         refresh: "Refresh",
         instant: "Hatch now",
         adoptAction: "Adopt",
+        premiumAction: "Adopt",
         sellAction: "Sell",
         cost: "Cost",
         cooldown: "Cooldown",
@@ -146,9 +154,14 @@ export default function Home() {
         moodBadge: "MOOD",
         hatchBadge: "FAST",
         adoptBadge: "NEW",
+        premiumBadge: "PREMIUM",
         sellBadge: "GOLD",
         payout: "Payout",
-        sellHint: "Selling removes the pet immediately."
+        sellHint: "Selling removes the pet immediately.",
+        sellConfirmTitle: "Confirm sale",
+        sellConfirmBody: "Sell pet #{id} ({tier}) for {payout} Gold?",
+        cancel: "Cancel",
+        confirm: "Confirm"
       },
       ui: {
         showMore: "Show more",
@@ -224,6 +237,7 @@ export default function Home() {
         emotion: "감정 리롤",
         hatch: "즉시 부화",
         adopt: "알 입양",
+        premium: "고급 알 입양",
         sell: "펫 판매",
         selectPet: "펫 선택",
         selectEgg: "알 선택",
@@ -231,6 +245,7 @@ export default function Home() {
         refresh: "리롤",
         instant: "지금 부화",
         adoptAction: "입양",
+        premiumAction: "입양",
         sellAction: "판매",
         cost: "가격",
         cooldown: "쿨타임",
@@ -240,9 +255,14 @@ export default function Home() {
         moodBadge: "기분",
         hatchBadge: "즉시",
         adoptBadge: "신규",
+        premiumBadge: "프리미엄",
         sellBadge: "골드",
         payout: "지급",
-        sellHint: "판매 즉시 펫이 삭제됩니다."
+        sellHint: "판매 즉시 펫이 삭제됩니다.",
+        sellConfirmTitle: "판매 확인",
+        sellConfirmBody: "펫 #{id} ({tier})를 {payout} 골드에 판매할까요?",
+        cancel: "취소",
+        confirm: "확인"
       },
       ui: {
         showMore: "더 보기",
@@ -257,7 +277,9 @@ export default function Home() {
 
   const text = copy[lang];
   const adoptRemainingSeconds = getAdoptRemainingSeconds(adoptEggReadyAt, now);
+  const premiumRemainingSeconds = getAdoptRemainingSeconds(premiumEggReadyAt, now);
   const prevAdoptRemaining = useRef<number>(adoptRemainingSeconds);
+  const prevPremiumRemaining = useRef<number>(premiumRemainingSeconds);
 
   const refresh = async () => {
     const state = await getState();
@@ -285,6 +307,9 @@ export default function Home() {
     );
     setAdoptEggReadyAt(state.adopt_egg_ready_at ?? null);
     setSellPrices(state.sell_price_by_tier ?? {});
+    setPremiumEggCost(state.adopt_premium_egg_cost ?? 30);
+    setPremiumEggCooldownSeconds(state.adopt_premium_egg_cooldown_seconds ?? 600);
+    setPremiumEggReadyAt(state.adopt_premium_egg_ready_at ?? null);
     if (marketEnabled) {
       const market = await getListings();
       setListings(market);
@@ -337,6 +362,12 @@ export default function Home() {
   }, [adoptHighlight]);
 
   useEffect(() => {
+    if (!premiumHighlight) return;
+    const timer = setTimeout(() => setPremiumHighlight(false), 1600);
+    return () => clearTimeout(timer);
+  }, [premiumHighlight]);
+
+  useEffect(() => {
     if (!highlightEggId) return;
     const timer = setTimeout(() => setHighlightEggId(null), 2500);
     return () => clearTimeout(timer);
@@ -350,6 +381,15 @@ export default function Home() {
     }
     prevAdoptRemaining.current = adoptRemainingSeconds;
   }, [adoptRemainingSeconds, text.ui.toastAdoptReady]);
+
+  useEffect(() => {
+    const prev = prevPremiumRemaining.current;
+    if (prev > 0 && premiumRemainingSeconds === 0) {
+      setToast(text.ui.toastAdoptReady);
+      setPremiumHighlight(true);
+    }
+    prevPremiumRemaining.current = premiumRemainingSeconds;
+  }, [premiumRemainingSeconds, text.ui.toastAdoptReady]);
 
   useEffect(() => {
     if (!highlightEggId) return;
@@ -449,6 +489,27 @@ export default function Home() {
     } catch (err: any) {
       const message = getAdoptErrorMessage(err.message || "Adopt egg failed.", lang);
       setAdoptError(message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleAdoptPremiumEgg = async () => {
+    setBusy(true);
+    setError(null);
+    setPremiumAdoptError(null);
+    try {
+      await adoptPremiumEgg();
+      await refresh();
+      setToast(text.ui.toastAdopted);
+      setPremiumHighlight(true);
+      playAdoptSound();
+    } catch (err: any) {
+      const message = getAdoptErrorMessage(
+        err.message || "Adopt premium egg failed.",
+        lang
+      );
+      setPremiumAdoptError(message);
     } finally {
       setBusy(false);
     }
@@ -746,14 +807,25 @@ export default function Home() {
               adoptRemainingSeconds={adoptRemainingSeconds}
               adoptStatusText={getAdoptStatusText(adoptEggReadyAt, now, lang)}
               adoptHighlight={adoptHighlight}
+              premiumPrice={premiumEggCost}
+              premiumCooldownMinutes={Math.max(
+                1,
+                Math.ceil(premiumEggCooldownSeconds / 60)
+              )}
+              premiumCooldownSeconds={premiumEggCooldownSeconds}
+              premiumRemainingSeconds={premiumRemainingSeconds}
+              premiumStatusText={getAdoptStatusText(premiumEggReadyAt, now, lang)}
+              premiumHighlight={premiumHighlight}
               sellPrices={sellPrices}
               onRefreshEmotion={handleRefreshEmotion}
               onInstantHatch={handleInstantHatch}
               onAdoptEgg={handleAdoptEgg}
+              onAdoptPremiumEgg={handleAdoptPremiumEgg}
               onSellPet={handleSellPet}
               busy={busy}
               error={error}
               adoptError={adoptError}
+              premiumAdoptError={premiumAdoptError}
               sellError={sellError}
               labels={text.shop}
             />
@@ -884,7 +956,7 @@ function getAdoptErrorMessage(message: string, lang: "en" | "ko" = "en") {
   if (message.includes("Not enough gold")) {
     return lang === "ko" ? "골드가 부족합니다." : "Not enough gold.";
   }
-  if (message.includes("Adoption cooldown")) {
+  if (message.includes("Adoption cooldown") || message.includes("Premium adoption cooldown")) {
     const match = message.match(/(\d+)s/);
     const seconds = match ? Number(match[1]) : 0;
     const duration = formatCooldown(seconds, lang);

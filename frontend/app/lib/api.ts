@@ -32,6 +32,9 @@ export type State = {
   adopt_egg_cooldown_seconds: number;
   adopt_egg_ready_at: string | null;
   sell_price_by_tier: Record<string, number>;
+  adopt_premium_egg_cost: number;
+  adopt_premium_egg_cooldown_seconds: number;
+  adopt_premium_egg_ready_at: string | null;
 };
 
 export type Listing = {
@@ -87,6 +90,12 @@ export function hatchAll(): Promise<Egg[]> {
 
 export function adoptEgg(): Promise<Egg> {
   return request<Egg>("/adopt-egg", {
+    method: "POST"
+  });
+}
+
+export function adoptPremiumEgg(): Promise<Egg> {
+  return request<Egg>("/adopt-egg-premium", {
     method: "POST"
   });
 }

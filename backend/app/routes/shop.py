@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import random
 from datetime import datetime
 
@@ -19,11 +20,11 @@ router = APIRouter(prefix="/shop", tags=["shop"])
 EMOTION_REFRESH_COST = 10
 INSTANT_HATCH_COST = 15
 SELL_PRICES = {
-    "Common": 3,
-    "Uncommon": 6,
-    "Rare": 12,
-    "Epic": 24,
-    "Legendary": 50,
+    "Common": int(os.getenv("SELL_PRICE_COMMON", "5")),
+    "Uncommon": int(os.getenv("SELL_PRICE_UNCOMMON", "10")),
+    "Rare": int(os.getenv("SELL_PRICE_RARE", "20")),
+    "Epic": int(os.getenv("SELL_PRICE_EPIC", "40")),
+    "Legendary": int(os.getenv("SELL_PRICE_LEGENDARY", "80")),
 }
 
 

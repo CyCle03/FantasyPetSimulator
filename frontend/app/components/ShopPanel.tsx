@@ -14,14 +14,22 @@ export default function ShopPanel({
   adoptRemainingSeconds,
   adoptStatusText,
   adoptHighlight,
+  premiumPrice,
+  premiumCooldownMinutes,
+  premiumCooldownSeconds,
+  premiumRemainingSeconds,
+  premiumStatusText,
+  premiumHighlight,
   sellPrices,
   onRefreshEmotion,
   onInstantHatch,
   onAdoptEgg,
+  onAdoptPremiumEgg,
   onSellPet,
   busy,
   error,
   adoptError,
+  premiumAdoptError,
   sellError,
   labels
 }: {
@@ -36,14 +44,22 @@ export default function ShopPanel({
   adoptRemainingSeconds: number;
   adoptStatusText: string;
   adoptHighlight: boolean;
+  premiumPrice: number;
+  premiumCooldownMinutes: number;
+  premiumCooldownSeconds: number;
+  premiumRemainingSeconds: number;
+  premiumStatusText: string;
+  premiumHighlight: boolean;
   sellPrices: Record<string, number>;
   onRefreshEmotion: (petId: number) => void;
   onInstantHatch: (eggId: number) => void;
   onAdoptEgg: () => void;
+  onAdoptPremiumEgg: () => void;
   onSellPet: (petId: number) => void;
   busy: boolean;
   error: string | null;
   adoptError: string | null;
+  premiumAdoptError: string | null;
   sellError: string | null;
   labels: {
     title: string;
@@ -70,18 +86,32 @@ export default function ShopPanel({
     payout: string;
     selectSellPet: string;
     sellHint: string;
+    sellConfirmTitle: string;
+    sellConfirmBody: string;
+    cancel: string;
+    confirm: string;
+    premium: string;
+    premiumBadge: string;
+    premiumAction: string;
   };
 }) {
   const incubating = eggs.filter((egg) => egg.status === "Incubating");
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const [selectedEggId, setSelectedEggId] = useState<number | null>(null);
   const [selectedSellPetId, setSelectedSellPetId] = useState<number | null>(null);
+  const [confirmSellPetId, setConfirmSellPetId] = useState<number | null>(null);
   const hasGold = gold >= adoptPrice;
   const canAdopt = hasGold && adoptRemainingSeconds === 0;
+  const hasPremiumGold = gold >= premiumPrice;
+  const canAdoptPremium = hasPremiumGold && premiumRemainingSeconds === 0;
   const totalCooldown = Math.max(1, adoptCooldownSeconds);
   const progress = Math.min(1, 1 - adoptRemainingSeconds / totalCooldown);
+  const premiumTotalCooldown = Math.max(1, premiumCooldownSeconds);
+  const premiumProgress = Math.min(1, 1 - premiumRemainingSeconds / premiumTotalCooldown);
   const sellPet = pets.find((pet) => pet.id === selectedSellPetId);
   const sellPrice = sellPet ? sellPrices[sellPet.rarity_tier] ?? 0 : 0;
+  const confirmPet = pets.find((pet) => pet.id === confirmSellPetId);
+  const confirmPrice = confirmPet ? sellPrices[confirmPet.rarity_tier] ?? 0 : 0;
 
   return (
     <section className="rounded-3xl border border-ink/10 bg-white/80 p-6 shadow-md">
@@ -215,6 +245,56 @@ export default function ShopPanel({
           ) : null}
         </div>
 
+        <div
+          className={`rounded-2xl border border-ink/10 bg-white/70 p-3 ${
+            premiumHighlight ? "adopt-highlight" : ""
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <p className="font-semibold">{labels.premium}</p>
+            <span className="rounded-full bg-black px-2 py-0.5 text-[10px] font-semibold text-white">
+              {labels.premiumBadge}
+            </span>
+            {premiumRemainingSeconds === 0 ? (
+              <span className="rounded-full bg-moss px-2 py-0.5 text-[10px] font-semibold text-white">
+                {labels.readyBadge}
+              </span>
+            ) : null}
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span className="text-xs text-ink/60">
+              {labels.cost}: {premiumPrice}
+            </span>
+            <span className="text-xs text-ink/60">
+              {labels.cooldown}: {premiumCooldownMinutes}m
+            </span>
+            <span className="text-xs text-ink/60">
+              {labels.status}: {premiumStatusText}
+            </span>
+            <button
+              className={`rounded-full border border-ink/20 px-3 py-1 text-xs font-semibold ${
+                premiumRemainingSeconds === 0 ? "adopt-ready" : ""
+              }`}
+              disabled={busy || !canAdoptPremium}
+              onClick={onAdoptPremiumEgg}
+            >
+              {labels.premiumAction}
+            </button>
+            {!hasPremiumGold ? (
+              <span className="text-xs text-ember">{labels.insufficientGold}</span>
+            ) : null}
+          </div>
+          <div className="mt-3 h-2 w-full rounded-full bg-ink/10">
+            <div
+              className="h-2 rounded-full bg-ink/80 transition-[width] duration-300"
+              style={{ width: `${Math.round(premiumProgress * 100)}%` }}
+            />
+          </div>
+          {premiumAdoptError ? (
+            <p className="mt-2 text-xs text-ember">{premiumAdoptError}</p>
+          ) : null}
+        </div>
+
         <div className="rounded-2xl border border-ink/10 bg-white/70 p-3">
           <div className="flex items-center gap-2">
             <p className="font-semibold">{labels.sell}</p>
@@ -245,7 +325,7 @@ export default function ShopPanel({
             <button
               className="rounded-full border border-ink/20 px-3 py-1 text-xs font-semibold"
               disabled={busy || !selectedSellPetId}
-              onClick={() => selectedSellPetId && onSellPet(selectedSellPetId)}
+              onClick={() => selectedSellPetId && setConfirmSellPetId(selectedSellPetId)}
             >
               {labels.sellAction}
             </button>
@@ -256,6 +336,38 @@ export default function ShopPanel({
 
         {error ? <p className="text-xs text-ember">{error}</p> : null}
       </div>
+
+      {confirmPet ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-ink/10 bg-white p-5 shadow-lg">
+            <h4 className="text-base font-semibold">{labels.sellConfirmTitle}</h4>
+            <p className="mt-2 text-sm text-ink/70">
+              {labels.sellConfirmBody
+                .replace("{id}", String(confirmPet.id))
+                .replace("{tier}", confirmPet.rarity_tier)
+                .replace("{payout}", String(confirmPrice))}
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                className="rounded-full border border-ink/20 px-3 py-1 text-xs font-semibold"
+                onClick={() => setConfirmSellPetId(null)}
+              >
+                {labels.cancel}
+              </button>
+              <button
+                className="rounded-full border border-ember bg-ember px-3 py-1 text-xs font-semibold text-white"
+                onClick={() => {
+                  if (!confirmSellPetId) return;
+                  onSellPet(confirmSellPetId);
+                  setConfirmSellPetId(null);
+                }}
+              >
+                {labels.confirm}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

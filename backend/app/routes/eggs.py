@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..genetics.emotions import pick_emotion
-from ..genetics.genome import choose_hidden_loci, random_genome
+from ..genetics.genome import RARE_ALLELES, choose_hidden_loci, get_locus_alleles, random_genome
 from ..genetics.phenotype import genome_to_phenotype
 from ..genetics.rarity import hatch_reward, rarity_profile
 from ..models import Egg, Pet, Player
@@ -20,6 +20,51 @@ EGG_HATCH_SECONDS = 60
 ADOPT_EGG_COST = int(os.getenv("ADOPT_EGG_COST", "12"))
 ADOPT_COOLDOWN_SECONDS = int(os.getenv("ADOPT_EGG_COOLDOWN_SECONDS", "300"))
 ADOPT_COOLDOWN = timedelta(seconds=ADOPT_COOLDOWN_SECONDS)
+ADOPT_PREMIUM_EGG_COST = int(os.getenv("ADOPT_PREMIUM_EGG_COST", "30"))
+ADOPT_PREMIUM_COOLDOWN_SECONDS = int(
+    os.getenv("ADOPT_PREMIUM_EGG_COOLDOWN_SECONDS", "600")
+)
+ADOPT_PREMIUM_COOLDOWN = timedelta(seconds=ADOPT_PREMIUM_COOLDOWN_SECONDS)
+PREMIUM_RARE_CHANCE = float(os.getenv("ADOPT_PREMIUM_RARE_CHANCE", "0.35"))
+PREMIUM_AURA_ACTIVE_CHANCE = float(os.getenv("ADOPT_PREMIUM_AURA_ACTIVE_CHANCE", "0.85"))
+PREMIUM_SHINY_CHANCE = float(os.getenv("ADOPT_PREMIUM_SHINY_CHANCE", "0.3"))
+
+
+def _pick_weighted_allele(
+    rng: random.Random,
+    locus: str,
+    prefer_rare: bool,
+    exclude: set[str] | None = None,
+) -> str:
+    exclude = exclude or set()
+    alleles = [a for a in get_locus_alleles(locus) if a not in exclude]
+    if not alleles:
+        alleles = get_locus_alleles(locus)
+    if prefer_rare and locus in RARE_ALLELES:
+        if rng.random() < PREMIUM_RARE_CHANCE:
+            return rng.choice(RARE_ALLELES[locus])
+    return rng.choice(alleles)
+
+
+def premium_genome(rng: random.Random) -> dict:
+    genome = random_genome(rng)
+
+    if rng.random() < PREMIUM_AURA_ACTIVE_CHANCE:
+        aura = _pick_weighted_allele(rng, "Aura", prefer_rare=True, exclude={"None"})
+        genome["Aura"] = [aura, aura]
+
+    if rng.random() < PREMIUM_RARE_CHANCE:
+        accessory = _pick_weighted_allele(rng, "Accessory", prefer_rare=True)
+        genome["Accessory"] = [accessory, accessory]
+
+    if rng.random() < PREMIUM_RARE_CHANCE:
+        eye_color = _pick_weighted_allele(rng, "EyeColor", prefer_rare=True)
+        genome["EyeColor"] = [eye_color, eye_color]
+
+    if rng.random() < PREMIUM_SHINY_CHANCE:
+        genome["ShinyGene"] = ["Shiny", "Shiny"]
+
+    return genome
 
 
 def _create_pet_from_genome(db: Session, genome: dict) -> Pet:
@@ -136,6 +181,41 @@ def adopt_egg(db: Session = Depends(get_db)):
     player.adopt_egg_ready_at = now + ADOPT_COOLDOWN
     rng = random.Random()
     genome = random_genome(rng)
+    egg = Egg(
+        hatch_at=now + timedelta(seconds=EGG_HATCH_SECONDS),
+        genome_json=genome,
+        status="Incubating",
+    )
+    db.add(egg)
+    db.commit()
+    db.refresh(egg)
+    return EggOut(
+        id=egg.id,
+        created_at=egg.created_at,
+        hatch_at=egg.hatch_at,
+        genome=egg.genome_json,
+        status=egg.status,
+        hatched_pet_id=egg.hatched_pet_id,
+    )
+
+
+@router.post("/adopt-egg-premium", response_model=EggOut)
+def adopt_premium_egg(db: Session = Depends(get_db)):
+    now = datetime.utcnow()
+    player = _get_player(db)
+    if player.gold < ADOPT_PREMIUM_EGG_COST:
+        raise HTTPException(status_code=400, detail="Not enough gold.")
+    if player.adopt_premium_egg_ready_at and player.adopt_premium_egg_ready_at > now:
+        remaining = int((player.adopt_premium_egg_ready_at - now).total_seconds())
+        raise HTTPException(
+            status_code=400,
+            detail=f"Premium adoption cooldown. Try again in {remaining}s.",
+        )
+
+    player.gold -= ADOPT_PREMIUM_EGG_COST
+    player.adopt_premium_egg_ready_at = now + ADOPT_PREMIUM_COOLDOWN
+    rng = random.Random()
+    genome = premium_genome(rng)
     egg = Egg(
         hatch_at=now + timedelta(seconds=EGG_HATCH_SECONDS),
         genome_json=genome,

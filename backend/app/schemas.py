@@ -50,6 +50,9 @@ class StateOut(BaseModel):
     adopt_egg_cooldown_seconds: int
     adopt_egg_ready_at: datetime | None
     sell_price_by_tier: dict[str, int]
+    adopt_premium_egg_cost: int
+    adopt_premium_egg_cooldown_seconds: int
+    adopt_premium_egg_ready_at: datetime | None
 
 
 class BreedIn(BaseModel):
