@@ -31,6 +31,7 @@ export type State = {
   adopt_egg_cost: number;
   adopt_egg_cooldown_seconds: number;
   adopt_egg_ready_at: string | null;
+  sell_price_by_tier: Record<string, number>;
 };
 
 export type Listing = {
@@ -132,5 +133,12 @@ export function instantHatch(eggId: number) {
   return request<{ ok: boolean; gold: number }>("/shop/instant-hatch", {
     method: "POST",
     body: JSON.stringify({ eggId })
+  });
+}
+
+export function sellPet(petId: number) {
+  return request<{ ok: boolean; gold: number; payout: number }>("/shop/sell", {
+    method: "POST",
+    body: JSON.stringify({ petId })
   });
 }

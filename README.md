@@ -103,6 +103,7 @@ Environment variables:
 - `POST /reset`: Dev-only DB reset (requires `ENV=development` or `ENV=dev`).
 - `POST /shop/refresh-emotion`: `{ petId }` reroll emotion (costs Gold).
 - `POST /shop/instant-hatch`: `{ eggId }` instantly hatch an egg (costs Gold).
+- `POST /shop/sell`: `{ petId }` sell a pet for Gold.
 - `GET /market/listings`: List active market items (when enabled).
 - `POST /market/list`: `{ petId, price, sellerName? }` create a listing.
 - `POST /market/buy`: `{ listingId, buyerName? }` buy a listing.
@@ -222,6 +223,7 @@ npm run dev
 - `POST /reset`: 개발 환경 전용 DB 초기화(`ENV=development` 또는 `ENV=dev` 필요).
 - `POST /shop/refresh-emotion`: `{ petId }` 감정 리롤(골드 소모).
 - `POST /shop/instant-hatch`: `{ eggId }` 즉시 부화(골드 소모).
+- `POST /shop/sell`: `{ petId }` 펫 판매(골드 획득).
 - `GET /market/listings`: 마켓 목록 조회(활성화 시).
 - `POST /market/list`: `{ petId, price, sellerName? }` 등록.
 - `POST /market/buy`: `{ listingId, buyerName? }` 구매.

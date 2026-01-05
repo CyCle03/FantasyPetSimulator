@@ -14,12 +14,15 @@ export default function ShopPanel({
   adoptRemainingSeconds,
   adoptStatusText,
   adoptHighlight,
+  sellPrices,
   onRefreshEmotion,
   onInstantHatch,
   onAdoptEgg,
+  onSellPet,
   busy,
   error,
   adoptError,
+  sellError,
   labels
 }: {
   pets: Pet[];
@@ -33,12 +36,15 @@ export default function ShopPanel({
   adoptRemainingSeconds: number;
   adoptStatusText: string;
   adoptHighlight: boolean;
+  sellPrices: Record<string, number>;
   onRefreshEmotion: (petId: number) => void;
   onInstantHatch: (eggId: number) => void;
   onAdoptEgg: () => void;
+  onSellPet: (petId: number) => void;
   busy: boolean;
   error: string | null;
   adoptError: string | null;
+  sellError: string | null;
   labels: {
     title: string;
     gold: string;
@@ -58,15 +64,24 @@ export default function ShopPanel({
     moodBadge: string;
     hatchBadge: string;
     adoptBadge: string;
+    sellBadge: string;
+    sell: string;
+    sellAction: string;
+    payout: string;
+    selectSellPet: string;
+    sellHint: string;
   };
 }) {
   const incubating = eggs.filter((egg) => egg.status === "Incubating");
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const [selectedEggId, setSelectedEggId] = useState<number | null>(null);
+  const [selectedSellPetId, setSelectedSellPetId] = useState<number | null>(null);
   const hasGold = gold >= adoptPrice;
   const canAdopt = hasGold && adoptRemainingSeconds === 0;
   const totalCooldown = Math.max(1, adoptCooldownSeconds);
   const progress = Math.min(1, 1 - adoptRemainingSeconds / totalCooldown);
+  const sellPet = pets.find((pet) => pet.id === selectedSellPetId);
+  const sellPrice = sellPet ? sellPrices[sellPet.rarity_tier] ?? 0 : 0;
 
   return (
     <section className="rounded-3xl border border-ink/10 bg-white/80 p-6 shadow-md">
@@ -198,6 +213,45 @@ export default function ShopPanel({
           {adoptError ? (
             <p className="mt-2 text-xs text-ember">{adoptError}</p>
           ) : null}
+        </div>
+
+        <div className="rounded-2xl border border-ink/10 bg-white/70 p-3">
+          <div className="flex items-center gap-2">
+            <p className="font-semibold">{labels.sell}</p>
+            <span className="rounded-full bg-ink px-2 py-0.5 text-[10px] font-semibold text-white">
+              {labels.sellBadge}
+            </span>
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <select
+              className="rounded-full border border-ink/20 bg-white px-3 py-1 text-xs"
+              value={selectedSellPetId ?? ""}
+              onChange={(event) => {
+                const value = Number(event.target.value);
+                setSelectedSellPetId(value || null);
+              }}
+            >
+              <option value="">{labels.selectSellPet}</option>
+              {pets.map((pet) => (
+                <option key={pet.id} value={pet.id}>
+                  #{pet.id} {pet.phenotype_public?.Species ?? pet.phenotype.Species} (
+                  {pet.rarity_tier})
+                </option>
+              ))}
+            </select>
+            <span className="text-xs text-ink/60">
+              {labels.payout}: {sellPrice}
+            </span>
+            <button
+              className="rounded-full border border-ink/20 px-3 py-1 text-xs font-semibold"
+              disabled={busy || !selectedSellPetId}
+              onClick={() => selectedSellPetId && onSellPet(selectedSellPetId)}
+            >
+              {labels.sellAction}
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-ink/60">{labels.sellHint}</p>
+          {sellError ? <p className="mt-2 text-xs text-ember">{sellError}</p> : null}
         </div>
 
         {error ? <p className="text-xs text-ember">{error}</p> : null}

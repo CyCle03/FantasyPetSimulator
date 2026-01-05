@@ -49,6 +49,7 @@ class StateOut(BaseModel):
     adopt_egg_cost: int
     adopt_egg_cooldown_seconds: int
     adopt_egg_ready_at: datetime | None
+    sell_price_by_tier: dict[str, int]
 
 
 class BreedIn(BaseModel):
@@ -101,3 +102,13 @@ class ShopHatchIn(BaseModel):
 class ShopResultOut(BaseModel):
     ok: bool
     gold: int
+
+
+class ShopSellIn(BaseModel):
+    pet_id: int = Field(alias="petId")
+
+
+class ShopSellOut(BaseModel):
+    ok: bool
+    gold: int
+    payout: int

@@ -18,6 +18,7 @@ import {
   hatch,
   hatchAll,
   adoptEgg,
+  sellPet,
   instantHatch,
   refreshEmotion,
   reset,
@@ -52,6 +53,8 @@ export default function Home() {
   const [adoptEggReadyAt, setAdoptEggReadyAt] = useState<string | null>(null);
   const [emotionRefreshCost, setEmotionRefreshCost] = useState(10);
   const [instantHatchCost, setInstantHatchCost] = useState(15);
+  const [sellPrices, setSellPrices] = useState<Record<string, number>>({});
+  const [sellError, setSellError] = useState<string | null>(null);
   const prevPetIds = useRef<Set<number>>(new Set());
   const hasInitializedPets = useRef(false);
   const prevEggIds = useRef<Set<number>>(new Set());
@@ -127,11 +130,14 @@ export default function Home() {
         emotion: "Refresh Emotion",
         hatch: "Instant Hatch",
         adopt: "Adopt Egg",
+        sell: "Sell Pet",
         selectPet: "Choose pet",
         selectEgg: "Choose egg",
+        selectSellPet: "Choose pet",
         refresh: "Refresh",
         instant: "Hatch now",
         adoptAction: "Adopt",
+        sellAction: "Sell",
         cost: "Cost",
         cooldown: "Cooldown",
         status: "Status",
@@ -139,7 +145,10 @@ export default function Home() {
         readyBadge: "READY",
         moodBadge: "MOOD",
         hatchBadge: "FAST",
-        adoptBadge: "NEW"
+        adoptBadge: "NEW",
+        sellBadge: "GOLD",
+        payout: "Payout",
+        sellHint: "Selling removes the pet immediately."
       },
       ui: {
         showMore: "Show more",
@@ -215,11 +224,14 @@ export default function Home() {
         emotion: "감정 리롤",
         hatch: "즉시 부화",
         adopt: "알 입양",
+        sell: "펫 판매",
         selectPet: "펫 선택",
         selectEgg: "알 선택",
+        selectSellPet: "펫 선택",
         refresh: "리롤",
         instant: "지금 부화",
         adoptAction: "입양",
+        sellAction: "판매",
         cost: "가격",
         cooldown: "쿨타임",
         status: "상태",
@@ -227,7 +239,10 @@ export default function Home() {
         readyBadge: "가능",
         moodBadge: "기분",
         hatchBadge: "즉시",
-        adoptBadge: "신규"
+        adoptBadge: "신규",
+        sellBadge: "골드",
+        payout: "지급",
+        sellHint: "판매 즉시 펫이 삭제됩니다."
       },
       ui: {
         showMore: "더 보기",
@@ -269,6 +284,7 @@ export default function Home() {
       state.adopt_egg_cooldown_seconds ?? adoptEggCooldownMinutesFallback * 60
     );
     setAdoptEggReadyAt(state.adopt_egg_ready_at ?? null);
+    setSellPrices(state.sell_price_by_tier ?? {});
     if (marketEnabled) {
       const market = await getListings();
       setListings(market);
@@ -433,6 +449,20 @@ export default function Home() {
     } catch (err: any) {
       const message = getAdoptErrorMessage(err.message || "Adopt egg failed.", lang);
       setAdoptError(message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleSellPet = async (petId: number) => {
+    setBusy(true);
+    setError(null);
+    setSellError(null);
+    try {
+      await sellPet(petId);
+      await refresh();
+    } catch (err: any) {
+      setSellError(err.message || "Failed to sell pet.");
     } finally {
       setBusy(false);
     }
@@ -716,12 +746,15 @@ export default function Home() {
               adoptRemainingSeconds={adoptRemainingSeconds}
               adoptStatusText={getAdoptStatusText(adoptEggReadyAt, now, lang)}
               adoptHighlight={adoptHighlight}
+              sellPrices={sellPrices}
               onRefreshEmotion={handleRefreshEmotion}
               onInstantHatch={handleInstantHatch}
               onAdoptEgg={handleAdoptEgg}
+              onSellPet={handleSellPet}
               busy={busy}
               error={error}
               adoptError={adoptError}
+              sellError={sellError}
               labels={text.shop}
             />
           </div>
