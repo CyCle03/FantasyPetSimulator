@@ -48,13 +48,14 @@ Environment variables:
 - Genetics are always calculated server-side.
 - Breeding cooldown is 10 minutes per parent.
 - Egg hatch time is 60 seconds; eggs do not auto-hatch.
-- You can generate a fresh egg via `/adopt-egg` (costs 12 Gold, 5m cooldown).
+- You can generate a fresh egg via `/adopt-egg` (defaults: 12 Gold, 5m cooldown).
 - Emotions refresh every 10 minutes on `/state` or via the shop.
 - Per-locus mutation starts at 10% and is tuned by element clashes and rarity stabilization.
 - Extra rare mutation: 0.2% chance to force a rare Aura/Accessory/EyeColor.
-- Hatch rewards grant Gold; shop costs 10 Gold (emotion refresh), 15 Gold (instant hatch), and 12 Gold (adopt egg).
+- Hatch rewards grant Gold; shop costs default to 10 (emotion refresh), 15 (instant hatch), and 12 (adopt egg).
 - Rarity tiers are server-calculated using part synergy rules.
 - `BREEDING_MUTATION_MULTIPLIER` scales mutation chances.
+- `ADOPT_EGG_COST` and `ADOPT_EGG_COOLDOWN_SECONDS` tune adopt pricing and cooldown.
 
 ## PNG Parts & Design
 - Sample parts are under `frontend/public/parts/{Locus}/{Value}.png`.
@@ -69,6 +70,9 @@ Environment variables:
 
 ## UI Language
 - Use the language dropdown in the header to switch between English and Korean.
+
+## Troubleshooting
+- If you see `no such column: players.adopt_egg_ready_at`, delete `backend/pets.db` and restart.
 
 ## Market (Experimental)
 - Enable backend: `ENABLE_MARKET=true`
@@ -91,7 +95,7 @@ Environment variables:
 5) (Optional) `NEXT_PUBLIC_ENABLE_MARKET=true`
 
 ## API Endpoints
-- `GET /state`: Returns pets, eggs, gold, and server time.
+- `GET /state`: Returns pets, eggs, gold, server time, and adopt-egg settings.
 - `POST /breed`: `{ parentAId, parentBId }` creates a new egg.
 - `POST /hatch`: `{ eggId }` hatch if ready.
 - `POST /hatch-all`: Hatch all ready eggs.
@@ -163,13 +167,14 @@ npm run dev
 - 유전 계산은 항상 서버에서 수행.
 - 교배 쿨타임은 부모당 10분.
 - 알 부화 시간은 60초이며, 자동 부화되지 않습니다.
-- `/adopt-egg`로 새로운 알을 생성할 수 있습니다(12 골드, 5분 쿨타임).
+- `/adopt-egg`로 새로운 알을 생성할 수 있습니다(기본값: 12 골드, 5분 쿨타임).
 - 감정은 `/state` 호출 시 10분 쿨타임마다 갱신되며, 상점에서도 리롤 가능.
 - 로커스별 돌연변이 확률은 기본 10%이며, 상성/희귀도 보정이 적용됩니다.
 - 추가 희귀 돌연변이: Aura/Accessory/EyeColor 0.2% 강제 희귀 치환.
-- 부화 보상으로 골드를 획득하며, 상점 비용은 10(감정 리롤), 15(즉시 부화), 12(알 입양)입니다.
+- 부화 보상으로 골드를 획득하며, 상점 비용 기본값은 10(감정 리롤), 15(즉시 부화), 12(알 입양)입니다.
 - 희귀도 등급은 서버 시너지 규칙으로 계산.
 - `BREEDING_MUTATION_MULTIPLIER`로 돌연변이 확률을 조정할 수 있습니다.
+- `ADOPT_EGG_COST`, `ADOPT_EGG_COOLDOWN_SECONDS`로 알 입양 비용/쿨타임을 조정할 수 있습니다.
 
 ## PNG 파츠 & 디자인
 - 샘플 파츠는 `frontend/public/parts/{Locus}/{Value}.png`에 포함됩니다.
@@ -184,6 +189,9 @@ npm run dev
 
 ## 언어 선택
 - 상단 언어 선택 드롭다운에서 영어/한국어를 전환할 수 있습니다.
+
+## 트러블슈팅
+- `no such column: players.adopt_egg_ready_at` 오류가 보이면 `backend/pets.db`를 삭제 후 재실행하세요.
 
 ## 마켓 (실험)
 - 백엔드 활성화: `ENABLE_MARKET=true`
@@ -206,7 +214,7 @@ npm run dev
 5) (선택) `NEXT_PUBLIC_ENABLE_MARKET=true`
 
 ## API 엔드포인트
-- `GET /state`: 펫/알/골드/서버 시간 반환.
+- `GET /state`: 펫/알/골드/서버 시간 + 알 입양 설정 반환.
 - `POST /breed`: `{ parentAId, parentBId }`로 알 생성.
 - `POST /hatch`: `{ eggId }` 부화(준비된 알만).
 - `POST /hatch-all`: 준비된 알을 모두 부화.

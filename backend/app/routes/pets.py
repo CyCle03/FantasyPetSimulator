@@ -17,6 +17,8 @@ from ..schemas import EggOut, PetOut, ResetOut, StateOut
 from ..seed import seed_db
 
 router = APIRouter()
+ADOPT_EGG_COST = int(os.getenv("ADOPT_EGG_COST", "12"))
+ADOPT_EGG_COOLDOWN_SECONDS = int(os.getenv("ADOPT_EGG_COOLDOWN_SECONDS", "300"))
 
 
 def _get_player(db: Session) -> Player:
@@ -102,6 +104,9 @@ def get_state(db: Session = Depends(get_db)):
         ],
         server_time=now,
         gold=player.gold,
+        adopt_egg_cost=ADOPT_EGG_COST,
+        adopt_egg_cooldown_seconds=ADOPT_EGG_COOLDOWN_SECONDS,
+        adopt_egg_ready_at=player.adopt_egg_ready_at,
     )
 
 

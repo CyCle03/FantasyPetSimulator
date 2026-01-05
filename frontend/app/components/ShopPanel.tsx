@@ -10,11 +10,16 @@ export default function ShopPanel({
   hatchPrice,
   adoptPrice,
   adoptCooldownMinutes,
+  adoptCooldownSeconds,
+  adoptRemainingSeconds,
+  adoptStatusText,
+  adoptHighlight,
   onRefreshEmotion,
   onInstantHatch,
   onAdoptEgg,
   busy,
   error,
+  adoptError,
   labels
 }: {
   pets: Pet[];
@@ -24,11 +29,16 @@ export default function ShopPanel({
   hatchPrice: number;
   adoptPrice: number;
   adoptCooldownMinutes: number;
+  adoptCooldownSeconds: number;
+  adoptRemainingSeconds: number;
+  adoptStatusText: string;
+  adoptHighlight: boolean;
   onRefreshEmotion: (petId: number) => void;
   onInstantHatch: (eggId: number) => void;
   onAdoptEgg: () => void;
   busy: boolean;
   error: string | null;
+  adoptError: string | null;
   labels: {
     title: string;
     gold: string;
@@ -42,11 +52,16 @@ export default function ShopPanel({
     adoptAction: string;
     cost: string;
     cooldown: string;
+    status: string;
+    insufficientGold: string;
   };
 }) {
   const incubating = eggs.filter((egg) => egg.status === "Incubating");
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const [selectedEggId, setSelectedEggId] = useState<number | null>(null);
+  const canAdopt = gold >= adoptPrice && adoptRemainingSeconds === 0;
+  const totalCooldown = Math.max(1, adoptCooldownSeconds);
+  const progress = Math.min(1, 1 - adoptRemainingSeconds / totalCooldown);
 
   return (
     <section className="rounded-3xl border border-ink/10 bg-white/80 p-6 shadow-md">
@@ -120,7 +135,11 @@ export default function ShopPanel({
           </div>
         </div>
 
-        <div className="rounded-2xl border border-ink/10 bg-white/70 p-3">
+        <div
+          className={`rounded-2xl border border-ink/10 bg-white/70 p-3 ${
+            adoptHighlight ? "adopt-highlight" : ""
+          }`}
+        >
           <p className="font-semibold">{labels.adopt}</p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <span className="text-xs text-ink/60">
@@ -129,14 +148,29 @@ export default function ShopPanel({
             <span className="text-xs text-ink/60">
               {labels.cooldown}: {adoptCooldownMinutes}m
             </span>
+            <span className="text-xs text-ink/60">
+              {labels.status}: {adoptStatusText}
+            </span>
             <button
               className="rounded-full border border-ink/20 px-3 py-1 text-xs font-semibold"
-              disabled={busy}
+              disabled={busy || !canAdopt}
               onClick={onAdoptEgg}
             >
               {labels.adoptAction}
             </button>
+            {!canAdopt ? (
+              <span className="text-xs text-ember">{labels.insufficientGold}</span>
+            ) : null}
           </div>
+          <div className="mt-3 h-2 w-full rounded-full bg-ink/10">
+            <div
+              className="h-2 rounded-full bg-amber-300 transition-[width] duration-300"
+              style={{ width: `${Math.round(progress * 100)}%` }}
+            />
+          </div>
+          {adoptError ? (
+            <p className="mt-2 text-xs text-ember">{adoptError}</p>
+          ) : null}
         </div>
 
         {error ? <p className="text-xs text-ember">{error}</p> : null}

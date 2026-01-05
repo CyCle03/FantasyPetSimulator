@@ -45,13 +45,18 @@ export default function Home() {
   const [listingPrice, setListingPrice] = useState("");
   const [toast, setToast] = useState<string | null>(null);
   const [highlightEggId, setHighlightEggId] = useState<number | null>(null);
+  const [adoptError, setAdoptError] = useState<string | null>(null);
+  const [adoptHighlight, setAdoptHighlight] = useState(false);
+  const [adoptEggCost, setAdoptEggCost] = useState(12);
+  const [adoptEggCooldownSeconds, setAdoptEggCooldownSeconds] = useState(300);
+  const [adoptEggReadyAt, setAdoptEggReadyAt] = useState<string | null>(null);
   const prevPetIds = useRef<Set<number>>(new Set());
   const hasInitializedPets = useRef(false);
   const prevEggIds = useRef<Set<number>>(new Set());
   const hasInitializedEggs = useRef(false);
   const marketEnabled = process.env.NEXT_PUBLIC_ENABLE_MARKET === "true";
-  const adoptEggCost = 12;
-  const adoptEggCooldownMinutes = 5;
+  const adoptEggCostFallback = 12;
+  const adoptEggCooldownMinutesFallback = 5;
 
   const copy = {
     en: {
@@ -126,7 +131,9 @@ export default function Home() {
         instant: "Hatch now",
         adoptAction: "Adopt",
         cost: "Cost",
-        cooldown: "Cooldown"
+        cooldown: "Cooldown",
+        status: "Status",
+        insufficientGold: "Not enough gold."
       },
       ui: {
         showMore: "Show more",
@@ -207,7 +214,9 @@ export default function Home() {
         instant: "지금 부화",
         adoptAction: "입양",
         cost: "가격",
-        cooldown: "쿨타임"
+        cooldown: "쿨타임",
+        status: "상태",
+        insufficientGold: "골드가 부족합니다."
       },
       ui: {
         showMore: "더 보기",
@@ -239,6 +248,11 @@ export default function Home() {
     const serverTime = new Date(state.server_time).getTime();
     setTimeOffsetMs(serverTime - Date.now());
     setGold(state.gold ?? 0);
+    setAdoptEggCost(state.adopt_egg_cost ?? adoptEggCostFallback);
+    setAdoptEggCooldownSeconds(
+      state.adopt_egg_cooldown_seconds ?? adoptEggCooldownMinutesFallback * 60
+    );
+    setAdoptEggReadyAt(state.adopt_egg_ready_at ?? null);
     if (marketEnabled) {
       const market = await getListings();
       setListings(market);
@@ -283,6 +297,12 @@ export default function Home() {
     const timer = setTimeout(() => setToast(null), 2200);
     return () => clearTimeout(timer);
   }, [toast]);
+
+  useEffect(() => {
+    if (!adoptHighlight) return;
+    const timer = setTimeout(() => setAdoptHighlight(false), 1600);
+    return () => clearTimeout(timer);
+  }, [adoptHighlight]);
 
   useEffect(() => {
     if (!highlightEggId) return;
@@ -370,12 +390,16 @@ export default function Home() {
   const handleAdoptEgg = async () => {
     setBusy(true);
     setError(null);
+    setAdoptError(null);
     try {
       await adoptEgg();
       await refresh();
       setToast(text.ui.toastAdopted);
+      setAdoptHighlight(true);
+      playAdoptSound();
     } catch (err: any) {
-      setError(err.message || "Adopt egg failed.");
+      const message = getAdoptErrorMessage(err.message || "Adopt egg failed.", lang);
+      setAdoptError(message);
     } finally {
       setBusy(false);
     }
@@ -654,12 +678,17 @@ export default function Home() {
               emotionPrice={10}
               hatchPrice={15}
               adoptPrice={adoptEggCost}
-              adoptCooldownMinutes={adoptEggCooldownMinutes}
+              adoptCooldownMinutes={Math.max(1, Math.ceil(adoptEggCooldownSeconds / 60))}
+              adoptCooldownSeconds={adoptEggCooldownSeconds}
+              adoptRemainingSeconds={getAdoptRemainingSeconds(adoptEggReadyAt, now)}
+              adoptStatusText={getAdoptStatusText(adoptEggReadyAt, now, lang)}
+              adoptHighlight={adoptHighlight}
               onRefreshEmotion={handleRefreshEmotion}
               onInstantHatch={handleInstantHatch}
               onAdoptEgg={handleAdoptEgg}
               busy={busy}
               error={error}
+              adoptError={adoptError}
               labels={text.shop}
             />
           </div>
@@ -755,6 +784,76 @@ export default function Home() {
       </div>
     </main>
   );
+}
+
+function getAdoptRemainingSeconds(readyAt: string | null, nowMs: number) {
+  if (!readyAt) return 0;
+  const remainingMs = new Date(readyAt).getTime() - nowMs;
+  return Math.max(0, Math.ceil(remainingMs / 1000));
+}
+
+function getAdoptStatusText(
+  readyAt: string | null,
+  nowMs: number,
+  lang: "en" | "ko"
+) {
+  const remaining = getAdoptRemainingSeconds(readyAt, nowMs);
+  if (remaining <= 0) {
+    return lang === "ko" ? "가능" : "Ready";
+  }
+  return formatCooldown(remaining, lang);
+}
+
+function formatCooldown(seconds: number, lang: "en" | "ko") {
+  const totalSeconds = Math.max(0, Math.floor(seconds));
+  const minutes = Math.floor(totalSeconds / 60);
+  const remain = totalSeconds % 60;
+  if (minutes <= 0) {
+    return lang === "ko" ? `${remain}초` : `${remain}s`;
+  }
+  return lang === "ko" ? `${minutes}분 ${remain}초` : `${minutes}m ${remain}s`;
+}
+
+function getAdoptErrorMessage(message: string, lang: "en" | "ko" = "en") {
+  if (message.includes("Not enough gold")) {
+    return lang === "ko" ? "골드가 부족합니다." : "Not enough gold.";
+  }
+  if (message.includes("Adoption cooldown")) {
+    const match = message.match(/(\d+)s/);
+    const seconds = match ? Number(match[1]) : 0;
+    const duration = formatCooldown(seconds, lang);
+    return lang === "ko"
+      ? `입양 쿨타임입니다. ${duration} 후 다시 시도하세요.`
+      : `Adoption cooldown. Try again in ${duration}.`;
+  }
+  return message;
+}
+
+function playAdoptSound() {
+  try {
+    const AudioContextRef =
+      window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextRef) return;
+    const context = new AudioContextRef();
+    const now = context.currentTime;
+
+    const tone = context.createOscillator();
+    const gain = context.createGain();
+    tone.type = "sine";
+    tone.frequency.setValueAtTime(659.25, now);
+    tone.frequency.exponentialRampToValueAtTime(523.25, now + 0.2);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.2, now + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.35);
+
+    tone.connect(gain);
+    gain.connect(context.destination);
+
+    tone.start(now);
+    tone.stop(now + 0.4);
+  } catch {
+    // Audio context might be blocked; ignore.
+  }
 }
 
 function playRareSound() {

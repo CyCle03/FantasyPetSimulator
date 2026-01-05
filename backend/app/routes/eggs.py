@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import random
 from datetime import datetime, timedelta
 
@@ -16,8 +17,9 @@ from ..schemas import EggOut, HatchIn
 
 router = APIRouter()
 EGG_HATCH_SECONDS = 60
-ADOPT_EGG_COST = 12
-ADOPT_COOLDOWN = timedelta(minutes=5)
+ADOPT_EGG_COST = int(os.getenv("ADOPT_EGG_COST", "12"))
+ADOPT_COOLDOWN_SECONDS = int(os.getenv("ADOPT_EGG_COOLDOWN_SECONDS", "300"))
+ADOPT_COOLDOWN = timedelta(seconds=ADOPT_COOLDOWN_SECONDS)
 
 
 def _create_pet_from_genome(db: Session, genome: dict) -> Pet:
