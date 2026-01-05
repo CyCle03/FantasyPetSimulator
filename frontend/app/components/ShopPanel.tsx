@@ -24,12 +24,16 @@ export default function ShopPanel({
   revealAuraCost,
   revealEyeColorCost,
   revealAccessoryCost,
+  revealCooldownSeconds,
+  revealRemainingSeconds,
+  revealStatusText,
   onRefreshEmotion,
   onInstantHatch,
   onAdoptEgg,
   onAdoptPremiumEgg,
   onRevealHidden,
   onSellPet,
+  shopNotes,
   busy,
   error,
   adoptError,
@@ -59,12 +63,16 @@ export default function ShopPanel({
   revealAuraCost: number;
   revealEyeColorCost: number;
   revealAccessoryCost: number;
+  revealCooldownSeconds: number;
+  revealRemainingSeconds: number;
+  revealStatusText: string;
   onRefreshEmotion: (petId: number) => void;
   onInstantHatch: (eggId: number) => void;
   onAdoptEgg: () => void;
   onAdoptPremiumEgg: () => void;
   onRevealHidden: (petId: number, locus: "Aura" | "EyeColor" | "Accessory") => void;
   onSellPet: (petId: number) => void;
+  shopNotes: string[];
   busy: boolean;
   error: string | null;
   adoptError: string | null;
@@ -110,6 +118,7 @@ export default function ShopPanel({
     revealAura: string;
     revealEyeColor: string;
     revealAccessory: string;
+    shopNotesTitle: string;
   };
 }) {
   const incubating = eggs.filter((egg) => egg.status === "Incubating");
@@ -140,6 +149,9 @@ export default function ShopPanel({
         ? revealEyeColorCost
         : revealAccessoryCost;
   const hasRevealGold = gold >= revealCost;
+  const canReveal = revealRemainingSeconds === 0;
+  const revealTotalCooldown = Math.max(1, revealCooldownSeconds);
+  const revealProgress = Math.min(1, 1 - revealRemainingSeconds / revealTotalCooldown);
 
   return (
     <section className="rounded-3xl border border-ink/10 bg-white/80 p-6 shadow-md">
@@ -399,9 +411,12 @@ export default function ShopPanel({
             <span className="text-xs text-ink/60">
               {labels.cost}: {revealCost}
             </span>
+            <span className="text-xs text-ink/60">
+              {labels.status}: {revealStatusText}
+            </span>
             <button
               className="rounded-full border border-ink/20 px-3 py-1 text-xs font-semibold"
-              disabled={busy || !selectedRevealPetId || !hasRevealGold}
+              disabled={busy || !selectedRevealPetId || !hasRevealGold || !canReveal}
               onClick={() =>
                 selectedRevealPetId && onRevealHidden(selectedRevealPetId, selectedRevealLocus)
               }
@@ -413,6 +428,12 @@ export default function ShopPanel({
             ) : null}
           </div>
           <p className="mt-2 text-xs text-ink/60">{labels.revealHiddenHint}</p>
+          <div className="mt-2 h-2 w-full rounded-full bg-ink/10">
+            <div
+              className="h-2 rounded-full bg-iris transition-[width] duration-300"
+              style={{ width: `${Math.round(revealProgress * 100)}%` }}
+            />
+          </div>
           {revealHiddenError ? (
             <p className="mt-2 text-xs text-ember">{revealHiddenError}</p>
           ) : null}
@@ -450,6 +471,17 @@ export default function ShopPanel({
               </button>
             </div>
           </div>
+        </div>
+      ) : null}
+
+      {shopNotes.length > 0 ? (
+        <div className="mt-4 rounded-2xl border border-ink/10 bg-white/70 p-3 text-xs text-ink/70">
+          <p className="font-semibold text-ink/80">{labels.shopNotesTitle}</p>
+          <ul className="mt-2 space-y-1">
+            {shopNotes.map((note, index) => (
+              <li key={`${note}-${index}`}>• {note}</li>
+            ))}
+          </ul>
         </div>
       ) : null}
     </section>

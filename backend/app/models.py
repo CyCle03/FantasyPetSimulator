@@ -34,6 +34,7 @@ class Player(Base):
     gold: Mapped[int] = mapped_column(Integer, default=0)
     adopt_egg_ready_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     adopt_premium_egg_ready_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    reveal_ready_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
 
 class Egg(Base):

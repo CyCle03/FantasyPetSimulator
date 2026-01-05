@@ -31,6 +31,8 @@ export type State = {
   reveal_aura_cost: number;
   reveal_eye_color_cost: number;
   reveal_accessory_cost: number;
+  reveal_cooldown_seconds: number;
+  reveal_ready_at: string | null;
   adopt_egg_cost: number;
   adopt_egg_cooldown_seconds: number;
   adopt_egg_ready_at: string | null;
@@ -38,6 +40,7 @@ export type State = {
   adopt_premium_egg_cost: number;
   adopt_premium_egg_cooldown_seconds: number;
   adopt_premium_egg_ready_at: string | null;
+  shop_notes: Record<string, string[]>;
 };
 
 export type Listing = {

@@ -41,6 +41,7 @@ export default function Home() {
   const [rareReveal, setRareReveal] = useState<Pet | null>(null);
   const [activePet, setActivePet] = useState<Pet | null>(null);
   const [gold, setGold] = useState(0);
+  const [lastHatchPet, setLastHatchPet] = useState<Pet | null>(null);
   const [visiblePets, setVisiblePets] = useState(8);
   const [visibleHatched, setVisibleHatched] = useState(6);
   const [listings, setListings] = useState<Listing[]>([]);
@@ -60,8 +61,15 @@ export default function Home() {
   const [revealAuraCost, setRevealAuraCost] = useState(8);
   const [revealEyeColorCost, setRevealEyeColorCost] = useState(6);
   const [revealAccessoryCost, setRevealAccessoryCost] = useState(6);
+  const [revealCooldownSeconds, setRevealCooldownSeconds] = useState(180);
+  const [revealReadyAt, setRevealReadyAt] = useState<string | null>(null);
   const [revealHiddenError, setRevealHiddenError] = useState<string | null>(null);
   const [highlightPetId, setHighlightPetId] = useState<number | null>(null);
+  const [shopNotes, setShopNotes] = useState<Record<string, string[]>>({});
+  const [activityLog, setActivityLog] = useState<
+    { id: number; ts: string; message: string }[]
+  >([]);
+  const logCounter = useRef(0);
   const [premiumEggCost, setPremiumEggCost] = useState(30);
   const [premiumEggCooldownSeconds, setPremiumEggCooldownSeconds] = useState(600);
   const [premiumEggReadyAt, setPremiumEggReadyAt] = useState<string | null>(null);
@@ -132,8 +140,9 @@ export default function Home() {
         confirmBuyBody: "Buy listing #{id} for {price} Gold?",
         confirmCancelBody: "Cancel listing #{id}?",
         confirm: "Confirm",
-        mineOnly: "My listings only",
         goldLabel: "Gold",
+        myListings: "My listings",
+        marketListings: "Marketplace",
         empty: "No active listings."
       },
       petModal: {
@@ -180,6 +189,7 @@ export default function Home() {
         sellConfirmBody: "Sell pet #{id} ({tier}) for {payout} Gold?",
         cancel: "Cancel",
         confirm: "Confirm",
+        shopNotesTitle: "Shop notes",
         revealHiddenHint: "Spend Gold to reveal a hidden trait."
       },
       ui: {
@@ -188,7 +198,11 @@ export default function Home() {
         rareHatch: "Rare Hatch",
         hatchAll: "Hatch all ready",
         toastAdopted: "A new egg is incubating!",
-        toastAdoptReady: "Egg adoption is ready."
+        toastAdoptReady: "Egg adoption is ready.",
+        hatchSummaryTitle: "Hatch summary",
+        hatchSummaryTags: "Tags",
+        activityTitle: "Activity",
+        activityClear: "Clear"
       }
     },
     ko: {
@@ -246,8 +260,9 @@ export default function Home() {
         confirmBuyBody: "등록 #{id}를 {price} 골드에 구매할까요?",
         confirmCancelBody: "등록 #{id}를 취소할까요?",
         confirm: "확인",
-        mineOnly: "내 등록만",
         goldLabel: "골드",
+        myListings: "내 등록",
+        marketListings: "마켓",
         empty: "활성화된 등록이 없습니다."
       },
       petModal: {
@@ -294,6 +309,7 @@ export default function Home() {
         sellConfirmBody: "펫 #{id} ({tier})를 {payout} 골드에 판매할까요?",
         cancel: "취소",
         confirm: "확인",
+        shopNotesTitle: "상점 안내",
         revealHiddenHint: "골드를 사용해 숨겨진 파츠를 공개합니다."
       },
       ui: {
@@ -302,7 +318,11 @@ export default function Home() {
         rareHatch: "희귀 부화",
         hatchAll: "준비된 알 모두 부화",
         toastAdopted: "새 알이 부화 중입니다!",
-        toastAdoptReady: "알 입양이 가능해졌습니다."
+        toastAdoptReady: "알 입양이 가능해졌습니다.",
+        hatchSummaryTitle: "부화 요약",
+        hatchSummaryTags: "태그",
+        activityTitle: "활동 로그",
+        activityClear: "비우기"
       }
     }
   } as const;
@@ -310,6 +330,7 @@ export default function Home() {
   const text = copy[lang];
   const adoptRemainingSeconds = getAdoptRemainingSeconds(adoptEggReadyAt, now);
   const premiumRemainingSeconds = getAdoptRemainingSeconds(premiumEggReadyAt, now);
+  const revealRemainingSeconds = getAdoptRemainingSeconds(revealReadyAt, now);
   const prevAdoptRemaining = useRef<number>(adoptRemainingSeconds);
   const prevPremiumRemaining = useRef<number>(premiumRemainingSeconds);
 
@@ -336,6 +357,9 @@ export default function Home() {
     setRevealAuraCost(state.reveal_aura_cost ?? 8);
     setRevealEyeColorCost(state.reveal_eye_color_cost ?? 6);
     setRevealAccessoryCost(state.reveal_accessory_cost ?? 6);
+    setRevealCooldownSeconds(state.reveal_cooldown_seconds ?? 180);
+    setRevealReadyAt(state.reveal_ready_at ?? null);
+    setShopNotes(state.shop_notes ?? {});
     setAdoptEggCost(state.adopt_egg_cost ?? adoptEggCostFallback);
     setAdoptEggCooldownSeconds(
       state.adopt_egg_cooldown_seconds ?? adoptEggCooldownMinutesFallback * 60
@@ -349,6 +373,18 @@ export default function Home() {
       const market = await getListings();
       setListings(market);
     }
+  };
+
+  const addLog = (message: string) => {
+    const ts = new Date().toLocaleTimeString(lang, {
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+    logCounter.current += 1;
+    setActivityLog((prev) => [
+      { id: logCounter.current, ts, message },
+      ...prev
+    ].slice(0, 20));
   };
 
   useEffect(() => {
@@ -368,13 +404,15 @@ export default function Home() {
       return;
     }
     const rareTiers = new Set(["Rare", "Epic", "Legendary"]);
-    const newPet = pets.find(
-      (pet) => !prevPetIds.current.has(pet.id) && rareTiers.has(pet.rarity_tier)
-    );
+    const newPet = pets.find((pet) => !prevPetIds.current.has(pet.id));
     prevPetIds.current = new Set(pets.map((pet) => pet.id));
     if (newPet) {
-      setRareReveal(newPet);
-      playRareSound();
+      setLastHatchPet(newPet);
+      setHighlightPetId(newPet.id);
+      if (rareTiers.has(newPet.rarity_tier)) {
+        setRareReveal(newPet);
+        playRareSound();
+      }
     }
   }, [pets]);
 
@@ -490,6 +528,11 @@ export default function Home() {
     try {
       await breed(selected[0], selected[1]);
       setSelected([]);
+      addLog(
+        lang === "ko"
+          ? `교배: ${selected[0]} + ${selected[1]}`
+          : `Breed: ${selected[0]} + ${selected[1]}`
+      );
       await refresh();
     } catch (err: any) {
       setError(err.message || "Breeding failed.");
@@ -503,6 +546,7 @@ export default function Home() {
     setError(null);
     try {
       await hatch(eggId);
+      addLog(lang === "ko" ? `부화: 알 #${eggId}` : `Hatch: Egg #${eggId}`);
       await refresh();
     } catch (err: any) {
       setError(err.message || "Hatch failed.");
@@ -517,6 +561,11 @@ export default function Home() {
     setError(null);
     try {
       await hatchAll();
+      addLog(
+        lang === "ko"
+          ? `모두 부화: ${readyEggs.length}개`
+          : `Hatch all: ${readyEggs.length}`
+      );
       await refresh();
     } catch (err: any) {
       setError(err.message || "Hatch all failed.");
@@ -535,6 +584,7 @@ export default function Home() {
       setToast(text.ui.toastAdopted);
       setAdoptHighlight(true);
       playAdoptSound();
+      addLog(lang === "ko" ? "알 입양" : "Adopt egg");
     } catch (err: any) {
       const message = getAdoptErrorMessage(err.message || "Adopt egg failed.", lang);
       setAdoptError(message);
@@ -553,6 +603,7 @@ export default function Home() {
       setToast(text.ui.toastAdopted);
       setPremiumHighlight(true);
       playAdoptSound();
+      addLog(lang === "ko" ? "프리미엄 알 입양" : "Adopt premium egg");
     } catch (err: any) {
       const message = getAdoptErrorMessage(
         err.message || "Adopt premium egg failed.",
@@ -570,6 +621,7 @@ export default function Home() {
     setSellError(null);
     try {
       await sellPet(petId);
+      addLog(lang === "ko" ? `판매: 펫 #${petId}` : `Sold pet #${petId}`);
       await refresh();
     } catch (err: any) {
       setSellError(err.message || "Failed to sell pet.");
@@ -593,6 +645,11 @@ export default function Home() {
           lang === "ko" ? "이미 공개된 항목입니다." : "Trait already revealed."
         );
       } else {
+        addLog(
+          lang === "ko"
+            ? `공개: ${locus} (펫 #${petId})`
+            : `Reveal: ${locus} (Pet #${petId})`
+        );
         const label =
           locus === "Aura"
             ? text.shop.revealAura
@@ -607,7 +664,19 @@ export default function Home() {
         setHighlightPetId(petId);
       }
     } catch (err: any) {
-      setRevealHiddenError(err.message || "Failed to reveal trait.");
+      const message = err.message || "Failed to reveal trait.";
+      if (message.includes("Reveal cooldown")) {
+        const match = message.match(/(\d+)s/);
+        const seconds = match ? Number(match[1]) : 0;
+        const duration = formatCooldown(seconds, lang);
+        setRevealHiddenError(
+          lang === "ko"
+            ? `공개 쿨타임입니다. ${duration} 후 다시 시도하세요.`
+            : `Reveal cooldown. Try again in ${duration}.`
+        );
+      } else {
+        setRevealHiddenError(message);
+      }
     } finally {
       setBusy(false);
     }
@@ -618,6 +687,7 @@ export default function Home() {
     setError(null);
     try {
       await reset();
+      addLog(lang === "ko" ? "DB 초기화" : "DB reset");
       await refresh();
     } catch (err: any) {
       setError(err.message || "Reset failed.");
@@ -639,6 +709,11 @@ export default function Home() {
       await createListing(listingPetId, priceValue);
       setListingPetId(null);
       setListingPrice("");
+      addLog(
+        lang === "ko"
+          ? `판매 등록: 펫 #${listingPetId} (${priceValue}G)`
+          : `Listed: Pet #${listingPetId} (${priceValue}G)`
+      );
       await refresh();
     } catch (err: any) {
       setError(err.message || "Failed to list pet.");
@@ -652,6 +727,7 @@ export default function Home() {
     setError(null);
     try {
       await buyListing(id);
+      addLog(lang === "ko" ? `구매: 등록 #${id}` : `Bought listing #${id}`);
       await refresh();
     } catch (err: any) {
       setError(err.message || "Failed to buy listing.");
@@ -665,6 +741,7 @@ export default function Home() {
     setError(null);
     try {
       await cancelListing(id);
+      addLog(lang === "ko" ? `등록 취소: #${id}` : `Cancelled listing #${id}`);
       await refresh();
     } catch (err: any) {
       setError(err.message || "Failed to cancel listing.");
@@ -678,6 +755,9 @@ export default function Home() {
     setError(null);
     try {
       await refreshEmotion(petId);
+      addLog(
+        lang === "ko" ? `감정 리롤: 펫 #${petId}` : `Refresh emotion: #${petId}`
+      );
       await refresh();
     } catch (err: any) {
       setError(err.message || "Failed to refresh emotion.");
@@ -691,6 +771,9 @@ export default function Home() {
     setError(null);
     try {
       await instantHatch(eggId);
+      addLog(
+        lang === "ko" ? `즉시 부화: 알 #${eggId}` : `Instant hatch: Egg #${eggId}`
+      );
       await refresh();
     } catch (err: any) {
       setError(err.message || "Failed to hatch instantly.");
@@ -880,6 +963,31 @@ export default function Home() {
               </div>
             </section>
 
+            <section className="rounded-3xl border border-ink/10 bg-white/80 p-6 shadow-md">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-lg font-semibold">{text.ui.activityTitle}</h3>
+                <button
+                  className="rounded-full border border-ink/20 px-3 py-1 text-xs font-semibold text-ink/70"
+                  onClick={() => setActivityLog([])}
+                  disabled={activityLog.length === 0}
+                >
+                  {text.ui.activityClear}
+                </button>
+              </div>
+              <div className="mt-3 space-y-2 text-xs text-ink/70">
+                {activityLog.length === 0 ? (
+                  <p className="text-ink/50">-</p>
+                ) : (
+                  activityLog.map((entry) => (
+                    <div key={entry.id} className="flex items-center justify-between gap-2">
+                      <span className="text-ink/50">{entry.ts}</span>
+                      <span className="text-right text-ink/80">{entry.message}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+
             <ShopPanel
               pets={pets}
               eggs={eggs}
@@ -905,12 +1013,16 @@ export default function Home() {
               revealAuraCost={revealAuraCost}
               revealEyeColorCost={revealEyeColorCost}
               revealAccessoryCost={revealAccessoryCost}
+              revealCooldownSeconds={revealCooldownSeconds}
+              revealRemainingSeconds={revealRemainingSeconds}
+              revealStatusText={getAdoptStatusText(revealReadyAt, now, lang)}
               onRefreshEmotion={handleRefreshEmotion}
               onInstantHatch={handleInstantHatch}
               onAdoptEgg={handleAdoptEgg}
               onAdoptPremiumEgg={handleAdoptPremiumEgg}
               onRevealHidden={handleRevealHidden}
               onSellPet={handleSellPet}
+              shopNotes={shopNotes[lang] ?? []}
               busy={busy}
               error={error}
               adoptError={adoptError}
@@ -945,6 +1057,31 @@ export default function Home() {
           {toast ? (
             <div className="mt-3 inline-flex items-center rounded-full border border-moss/30 bg-white/90 px-4 py-1 text-xs font-semibold text-moss">
               {toast}
+            </div>
+          ) : null}
+          {lastHatchPet ? (
+            <div className="mt-4 rounded-2xl border border-ink/10 bg-white/80 p-4 text-sm text-ink/80 shadow-sm">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em] text-ink/50">
+                    {text.ui.hatchSummaryTitle}
+                  </p>
+                  <p className="mt-1 font-semibold">
+                    {(lastHatchPet.phenotype_public ?? lastHatchPet.phenotype).Species} ·{" "}
+                    {lastHatchPet.rarity_tier}
+                  </p>
+                </div>
+                <button
+                  className="rounded-full border border-ink/20 px-2 py-1 text-xs font-semibold text-ink/60"
+                  onClick={() => setLastHatchPet(null)}
+                >
+                  ✕
+                </button>
+              </div>
+              <p className="mt-2 text-xs text-ink/70">
+                {text.ui.hatchSummaryTags}:{" "}
+                {(lastHatchPet.rarity_tags || []).slice(0, 4).join(", ") || "-"}
+              </p>
             </div>
           ) : null}
           <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">

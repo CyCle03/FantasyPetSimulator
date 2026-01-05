@@ -49,6 +49,8 @@ class StateOut(BaseModel):
     reveal_aura_cost: int
     reveal_eye_color_cost: int
     reveal_accessory_cost: int
+    reveal_cooldown_seconds: int
+    reveal_ready_at: datetime | None
     adopt_egg_cost: int
     adopt_egg_cooldown_seconds: int
     adopt_egg_ready_at: datetime | None
@@ -56,6 +58,7 @@ class StateOut(BaseModel):
     adopt_premium_egg_cost: int
     adopt_premium_egg_cooldown_seconds: int
     adopt_premium_egg_ready_at: datetime | None
+    shop_notes: dict[str, list[str]]
 
 
 class BreedIn(BaseModel):

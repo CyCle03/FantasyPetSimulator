@@ -47,8 +47,9 @@ export default function MarketPanel({
     confirmBuyBody: string;
     confirmCancelBody: string;
     confirm: string;
-    mineOnly: string;
     goldLabel: string;
+    myListings: string;
+    marketListings: string;
     empty: string;
   };
 }) {
@@ -56,7 +57,6 @@ export default function MarketPanel({
     action: "buy" | "cancel";
     listing: Listing;
   } | null>(null);
-  const [mineOnly, setMineOnly] = useState(false);
   if (!enabled) {
     return (
       <section className="rounded-3xl border border-ink/10 bg-white/80 p-6 shadow-md">
@@ -66,9 +66,8 @@ export default function MarketPanel({
     );
   }
 
-  const visibleListings = mineOnly
-    ? listings.filter((listing) => listing.seller_name === "LocalUser")
-    : listings;
+  const myListings = listings.filter((listing) => listing.seller_name === "LocalUser");
+  const marketListings = listings.filter((listing) => listing.seller_name !== "LocalUser");
 
   return (
     <section className="rounded-3xl border border-ink/10 bg-white/80 p-6 shadow-md">
@@ -115,58 +114,92 @@ export default function MarketPanel({
           {busy ? labels.listing : labels.list}
         </button>
 
-        <label className="ml-auto flex items-center gap-2 text-xs text-ink/70">
-          <input
-            type="checkbox"
-            checked={mineOnly}
-            onChange={(event) => setMineOnly(event.target.checked)}
-          />
-          {labels.mineOnly}
-        </label>
       </div>
 
       {error ? <p className="mt-3 text-sm text-ember">{error}</p> : null}
 
-      <div className="mt-6 grid gap-3 md:grid-cols-2">
-        {visibleListings.length === 0 ? (
-          <p className="text-sm text-ink/60">{labels.empty}</p>
-        ) : (
-          visibleListings.map((listing) => (
-            <div
-              key={listing.id}
-              className="rounded-2xl border border-ink/10 bg-white/70 p-4"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-semibold">{labels.listing} #{listing.id}</p>
-                  <p className="text-xs text-ink/60">{labels.pet} #{listing.pet_id}</p>
+      <div className="mt-6 space-y-6">
+        <div>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-ink/80">{labels.myListings}</h3>
+            <span className="text-xs text-ink/60">{myListings.length}</span>
+          </div>
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            {myListings.length === 0 ? (
+              <p className="text-sm text-ink/60">{labels.empty}</p>
+            ) : (
+              myListings.map((listing) => (
+                <div
+                  key={listing.id}
+                  className="rounded-2xl border border-ink/10 bg-white/70 p-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold">{labels.listing} #{listing.id}</p>
+                      <p className="text-xs text-ink/60">{labels.pet} #{listing.pet_id}</p>
+                    </div>
+                    <span className="rounded-full bg-ink px-3 py-1 text-xs text-white">
+                      {listing.price} Gold
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs text-ink/70">
+                    {labels.seller}: {listing.seller_name}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      className="rounded-full border border-ink/20 px-3 py-1 text-xs font-semibold text-ink transition hover:bg-ink/10"
+                      onClick={() => setConfirm({ action: "cancel", listing })}
+                      disabled={busy}
+                    >
+                      {labels.cancel}
+                    </button>
+                  </div>
                 </div>
-                <span className="rounded-full bg-ink px-3 py-1 text-xs text-white">
-                  {listing.price} Gold
-                </span>
-              </div>
-              <p className="mt-2 text-xs text-ink/70">
-                {labels.seller}: {listing.seller_name}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button
-                  className="rounded-full border border-ink/20 px-3 py-1 text-xs font-semibold text-ink transition hover:bg-ink/10"
-                  onClick={() => setConfirm({ action: "buy", listing })}
-                  disabled={busy}
+              ))
+            )}
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-ink/80">{labels.marketListings}</h3>
+            <span className="text-xs text-ink/60">{marketListings.length}</span>
+          </div>
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            {marketListings.length === 0 ? (
+              <p className="text-sm text-ink/60">{labels.empty}</p>
+            ) : (
+              marketListings.map((listing) => (
+                <div
+                  key={listing.id}
+                  className="rounded-2xl border border-ink/10 bg-white/70 p-4"
                 >
-                  {labels.buy}
-                </button>
-                <button
-                  className="rounded-full border border-ink/20 px-3 py-1 text-xs font-semibold text-ink transition hover:bg-ink/10"
-                  onClick={() => setConfirm({ action: "cancel", listing })}
-                  disabled={busy}
-                >
-                  {labels.cancel}
-                </button>
-              </div>
-            </div>
-          ))
-        )}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold">{labels.listing} #{listing.id}</p>
+                      <p className="text-xs text-ink/60">{labels.pet} #{listing.pet_id}</p>
+                    </div>
+                    <span className="rounded-full bg-ink px-3 py-1 text-xs text-white">
+                      {listing.price} Gold
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs text-ink/70">
+                    {labels.seller}: {listing.seller_name}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      className="rounded-full border border-ink/20 px-3 py-1 text-xs font-semibold text-ink transition hover:bg-ink/10"
+                      onClick={() => setConfirm({ action: "buy", listing })}
+                      disabled={busy}
+                    >
+                      {labels.buy}
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
 
       {confirm ? (

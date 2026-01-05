@@ -20,6 +20,7 @@ from .shop import (
     INSTANT_HATCH_COST,
     REVEAL_ACCESSORY_COST,
     REVEAL_AURA_COST,
+    REVEAL_COOLDOWN_SECONDS,
     REVEAL_EYE_COLOR_COST,
     SELL_PRICES,
 )
@@ -31,6 +32,16 @@ ADOPT_PREMIUM_EGG_COST = int(os.getenv("ADOPT_PREMIUM_EGG_COST", "30"))
 ADOPT_PREMIUM_EGG_COOLDOWN_SECONDS = int(
     os.getenv("ADOPT_PREMIUM_EGG_COOLDOWN_SECONDS", "600")
 )
+SHOP_NOTES = {
+    "en": [
+        "Selling removes the pet immediately.",
+        "Reveal costs vary by hidden trait.",
+    ],
+    "ko": [
+        "판매 시 펫이 즉시 삭제됩니다.",
+        "숨김 파츠에 따라 공개 비용이 달라집니다.",
+    ],
+}
 
 
 def _get_player(db: Session) -> Player:
@@ -121,6 +132,8 @@ def get_state(db: Session = Depends(get_db)):
         reveal_aura_cost=REVEAL_AURA_COST,
         reveal_eye_color_cost=REVEAL_EYE_COLOR_COST,
         reveal_accessory_cost=REVEAL_ACCESSORY_COST,
+        reveal_cooldown_seconds=REVEAL_COOLDOWN_SECONDS,
+        reveal_ready_at=player.reveal_ready_at,
         adopt_egg_cost=ADOPT_EGG_COST,
         adopt_egg_cooldown_seconds=ADOPT_EGG_COOLDOWN_SECONDS,
         adopt_egg_ready_at=player.adopt_egg_ready_at,
@@ -128,6 +141,7 @@ def get_state(db: Session = Depends(get_db)):
         adopt_premium_egg_cost=ADOPT_PREMIUM_EGG_COST,
         adopt_premium_egg_cooldown_seconds=ADOPT_PREMIUM_EGG_COOLDOWN_SECONDS,
         adopt_premium_egg_ready_at=player.adopt_premium_egg_ready_at,
+        shop_notes=SHOP_NOTES,
     )
 
 
