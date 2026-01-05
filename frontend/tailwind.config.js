@@ -12,7 +12,8 @@ module.exports = {
         ember: "#f97316",
         moss: "#2f855a",
         sky: "#2563eb",
-        pearl: "#e2e8f0"
+        pearl: "#e2e8f0",
+        iris: "#6d28d9"
       }
     }
   },

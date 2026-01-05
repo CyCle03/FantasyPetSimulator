@@ -46,6 +46,7 @@ class StateOut(BaseModel):
     gold: int
     emotion_refresh_cost: int
     instant_hatch_cost: int
+    reveal_aura_cost: int
     adopt_egg_cost: int
     adopt_egg_cooldown_seconds: int
     adopt_egg_ready_at: datetime | None
@@ -115,3 +116,13 @@ class ShopSellOut(BaseModel):
     ok: bool
     gold: int
     payout: int
+
+
+class ShopRevealIn(BaseModel):
+    pet_id: int = Field(alias="petId")
+
+
+class ShopRevealOut(BaseModel):
+    ok: bool
+    gold: int
+    revealed: bool

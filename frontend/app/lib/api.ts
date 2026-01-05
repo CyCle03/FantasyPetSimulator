@@ -28,6 +28,7 @@ export type State = {
   gold: number;
   emotion_refresh_cost: number;
   instant_hatch_cost: number;
+  reveal_aura_cost: number;
   adopt_egg_cost: number;
   adopt_egg_cooldown_seconds: number;
   adopt_egg_ready_at: string | null;
@@ -147,6 +148,13 @@ export function instantHatch(eggId: number) {
 
 export function sellPet(petId: number) {
   return request<{ ok: boolean; gold: number; payout: number }>("/shop/sell", {
+    method: "POST",
+    body: JSON.stringify({ petId })
+  });
+}
+
+export function revealAura(petId: number) {
+  return request<{ ok: boolean; gold: number; revealed: boolean }>("/shop/reveal-aura", {
     method: "POST",
     body: JSON.stringify({ petId })
   });

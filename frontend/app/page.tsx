@@ -20,6 +20,7 @@ import {
   adoptEgg,
   adoptPremiumEgg,
   sellPet,
+  revealAura,
   instantHatch,
   refreshEmotion,
   reset,
@@ -56,6 +57,8 @@ export default function Home() {
   const [instantHatchCost, setInstantHatchCost] = useState(15);
   const [sellPrices, setSellPrices] = useState<Record<string, number>>({});
   const [sellError, setSellError] = useState<string | null>(null);
+  const [revealAuraCost, setRevealAuraCost] = useState(8);
+  const [revealAuraError, setRevealAuraError] = useState<string | null>(null);
   const [premiumEggCost, setPremiumEggCost] = useState(30);
   const [premiumEggCooldownSeconds, setPremiumEggCooldownSeconds] = useState(600);
   const [premiumEggReadyAt, setPremiumEggReadyAt] = useState<string | null>(null);
@@ -138,6 +141,7 @@ export default function Home() {
         adopt: "Adopt Egg",
         premium: "Premium Egg (Rare Odds)",
         sell: "Sell Pet",
+        revealAura: "Reveal Aura",
         selectPet: "Choose pet",
         selectEgg: "Choose egg",
         selectSellPet: "Choose pet",
@@ -146,6 +150,7 @@ export default function Home() {
         adoptAction: "Adopt",
         premiumAction: "Adopt",
         sellAction: "Sell",
+        revealAuraAction: "Reveal",
         cost: "Cost",
         cooldown: "Cooldown",
         status: "Status",
@@ -156,12 +161,14 @@ export default function Home() {
         adoptBadge: "NEW",
         premiumBadge: "PREMIUM",
         sellBadge: "GOLD",
+        revealAuraBadge: "HIDDEN",
         payout: "Payout",
         sellHint: "Selling removes the pet immediately.",
         sellConfirmTitle: "Confirm sale",
         sellConfirmBody: "Sell pet #{id} ({tier}) for {payout} Gold?",
         cancel: "Cancel",
-        confirm: "Confirm"
+        confirm: "Confirm",
+        revealAuraHint: "Spend Gold to reveal a hidden Aura."
       },
       ui: {
         showMore: "Show more",
@@ -239,6 +246,7 @@ export default function Home() {
         adopt: "알 입양",
         premium: "프리미엄 알(희귀 확률↑)",
         sell: "펫 판매",
+        revealAura: "오라 공개",
         selectPet: "펫 선택",
         selectEgg: "알 선택",
         selectSellPet: "펫 선택",
@@ -247,6 +255,7 @@ export default function Home() {
         adoptAction: "입양",
         premiumAction: "입양",
         sellAction: "판매",
+        revealAuraAction: "공개",
         cost: "가격",
         cooldown: "쿨타임",
         status: "상태",
@@ -257,12 +266,14 @@ export default function Home() {
         adoptBadge: "신규",
         premiumBadge: "프리미엄",
         sellBadge: "골드",
+        revealAuraBadge: "숨김",
         payout: "지급",
         sellHint: "판매 즉시 펫이 삭제됩니다.",
         sellConfirmTitle: "판매 확인",
         sellConfirmBody: "펫 #{id} ({tier})를 {payout} 골드에 판매할까요?",
         cancel: "취소",
-        confirm: "확인"
+        confirm: "확인",
+        revealAuraHint: "골드를 사용해 숨겨진 오라를 공개합니다."
       },
       ui: {
         showMore: "더 보기",
@@ -301,6 +312,7 @@ export default function Home() {
     setGold(state.gold ?? 0);
     setEmotionRefreshCost(state.emotion_refresh_cost ?? 10);
     setInstantHatchCost(state.instant_hatch_cost ?? 15);
+    setRevealAuraCost(state.reveal_aura_cost ?? 8);
     setAdoptEggCost(state.adopt_egg_cost ?? adoptEggCostFallback);
     setAdoptEggCooldownSeconds(
       state.adopt_egg_cooldown_seconds ?? adoptEggCooldownMinutesFallback * 60
@@ -524,6 +536,25 @@ export default function Home() {
       await refresh();
     } catch (err: any) {
       setSellError(err.message || "Failed to sell pet.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleRevealAura = async (petId: number) => {
+    setBusy(true);
+    setError(null);
+    setRevealAuraError(null);
+    try {
+      const result = await revealAura(petId);
+      await refresh();
+      if (!result.revealed) {
+        setRevealAuraError(
+          lang === "ko" ? "이미 공개된 오라입니다." : "Aura already revealed."
+        );
+      }
+    } catch (err: any) {
+      setRevealAuraError(err.message || "Failed to reveal aura.");
     } finally {
       setBusy(false);
     }
@@ -817,15 +848,18 @@ export default function Home() {
               premiumStatusText={getAdoptStatusText(premiumEggReadyAt, now, lang)}
               premiumHighlight={premiumHighlight}
               sellPrices={sellPrices}
+              revealAuraCost={revealAuraCost}
               onRefreshEmotion={handleRefreshEmotion}
               onInstantHatch={handleInstantHatch}
               onAdoptEgg={handleAdoptEgg}
               onAdoptPremiumEgg={handleAdoptPremiumEgg}
+              onRevealAura={handleRevealAura}
               onSellPet={handleSellPet}
               busy={busy}
               error={error}
               adoptError={adoptError}
               premiumAdoptError={premiumAdoptError}
+              revealAuraError={revealAuraError}
               sellError={sellError}
               labels={text.shop}
             />

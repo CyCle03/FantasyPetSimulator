@@ -21,15 +21,18 @@ export default function ShopPanel({
   premiumStatusText,
   premiumHighlight,
   sellPrices,
+  revealAuraCost,
   onRefreshEmotion,
   onInstantHatch,
   onAdoptEgg,
   onAdoptPremiumEgg,
+  onRevealAura,
   onSellPet,
   busy,
   error,
   adoptError,
   premiumAdoptError,
+  revealAuraError,
   sellError,
   labels
 }: {
@@ -51,15 +54,18 @@ export default function ShopPanel({
   premiumStatusText: string;
   premiumHighlight: boolean;
   sellPrices: Record<string, number>;
+  revealAuraCost: number;
   onRefreshEmotion: (petId: number) => void;
   onInstantHatch: (eggId: number) => void;
   onAdoptEgg: () => void;
   onAdoptPremiumEgg: () => void;
+  onRevealAura: (petId: number) => void;
   onSellPet: (petId: number) => void;
   busy: boolean;
   error: string | null;
   adoptError: string | null;
   premiumAdoptError: string | null;
+  revealAuraError: string | null;
   sellError: string | null;
   labels: {
     title: string;
@@ -93,12 +99,17 @@ export default function ShopPanel({
     premium: string;
     premiumBadge: string;
     premiumAction: string;
+    revealAura: string;
+    revealAuraBadge: string;
+    revealAuraAction: string;
+    revealAuraHint: string;
   };
 }) {
   const incubating = eggs.filter((egg) => egg.status === "Incubating");
   const [selectedPetId, setSelectedPetId] = useState<number | null>(null);
   const [selectedEggId, setSelectedEggId] = useState<number | null>(null);
   const [selectedSellPetId, setSelectedSellPetId] = useState<number | null>(null);
+  const [selectedRevealPetId, setSelectedRevealPetId] = useState<number | null>(null);
   const [confirmSellPetId, setConfirmSellPetId] = useState<number | null>(null);
   const hasGold = gold >= adoptPrice;
   const canAdopt = hasGold && adoptRemainingSeconds === 0;
@@ -112,6 +123,7 @@ export default function ShopPanel({
   const sellPrice = sellPet ? sellPrices[sellPet.rarity_tier] ?? 0 : 0;
   const confirmPet = pets.find((pet) => pet.id === confirmSellPetId);
   const confirmPrice = confirmPet ? sellPrices[confirmPet.rarity_tier] ?? 0 : 0;
+  const hasRevealGold = gold >= revealAuraCost;
 
   return (
     <section className="rounded-3xl border border-ink/10 bg-white/80 p-6 shadow-md">
@@ -332,6 +344,49 @@ export default function ShopPanel({
           </div>
           <p className="mt-2 text-xs text-ink/60">{labels.sellHint}</p>
           {sellError ? <p className="mt-2 text-xs text-ember">{sellError}</p> : null}
+        </div>
+
+        <div className="rounded-2xl border border-ink/10 bg-white/70 p-3">
+          <div className="flex items-center gap-2">
+            <p className="font-semibold">{labels.revealAura}</p>
+            <span className="rounded-full bg-iris px-2 py-0.5 text-[10px] font-semibold text-white">
+              {labels.revealAuraBadge}
+            </span>
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <select
+              className="rounded-full border border-ink/20 bg-white px-3 py-1 text-xs"
+              value={selectedRevealPetId ?? ""}
+              onChange={(event) => {
+                const value = Number(event.target.value);
+                setSelectedRevealPetId(value || null);
+              }}
+            >
+              <option value="">{labels.selectPet}</option>
+              {pets.map((pet) => (
+                <option key={pet.id} value={pet.id}>
+                  #{pet.id} {pet.phenotype_public?.Species ?? pet.phenotype.Species}
+                </option>
+              ))}
+            </select>
+            <span className="text-xs text-ink/60">
+              {labels.cost}: {revealAuraCost}
+            </span>
+            <button
+              className="rounded-full border border-ink/20 px-3 py-1 text-xs font-semibold"
+              disabled={busy || !selectedRevealPetId || !hasRevealGold}
+              onClick={() => selectedRevealPetId && onRevealAura(selectedRevealPetId)}
+            >
+              {labels.revealAuraAction}
+            </button>
+            {!hasRevealGold ? (
+              <span className="text-xs text-ember">{labels.insufficientGold}</span>
+            ) : null}
+          </div>
+          <p className="mt-2 text-xs text-ink/60">{labels.revealAuraHint}</p>
+          {revealAuraError ? (
+            <p className="mt-2 text-xs text-ember">{revealAuraError}</p>
+          ) : null}
         </div>
 
         {error ? <p className="text-xs text-ember">{error}</p> : null}

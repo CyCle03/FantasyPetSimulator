@@ -13,12 +13,21 @@ from ..genetics.genome import choose_hidden_loci
 from ..genetics.phenotype import genome_to_phenotype
 from ..genetics.rarity import rarity_profile
 from ..models import Egg, MarketListing, Pet, Player
-from ..schemas import ShopEmotionIn, ShopHatchIn, ShopResultOut, ShopSellIn, ShopSellOut
+from ..schemas import (
+    ShopEmotionIn,
+    ShopHatchIn,
+    ShopResultOut,
+    ShopSellIn,
+    ShopSellOut,
+    ShopRevealIn,
+    ShopRevealOut,
+)
 
 router = APIRouter(prefix="/shop", tags=["shop"])
 
 EMOTION_REFRESH_COST = 10
 INSTANT_HATCH_COST = 15
+REVEAL_AURA_COST = int(os.getenv("REVEAL_AURA_COST", "8"))
 SELL_PRICES = {
     "Common": int(os.getenv("SELL_PRICE_COMMON", "5")),
     "Uncommon": int(os.getenv("SELL_PRICE_UNCOMMON", "10")),
@@ -122,3 +131,25 @@ def sell_pet(payload: ShopSellIn, db: Session = Depends(get_db)):
     db.commit()
 
     return ShopSellOut(ok=True, gold=player.gold, payout=payout)
+
+
+@router.post("/reveal-aura", response_model=ShopRevealOut)
+def reveal_aura(payload: ShopRevealIn, db: Session = Depends(get_db)):
+    player = _get_player(db)
+    if player.gold < REVEAL_AURA_COST:
+        raise HTTPException(status_code=400, detail="Not enough gold.")
+
+    pet = db.query(Pet).filter(Pet.id == payload.pet_id).first()
+    if not pet:
+        raise HTTPException(status_code=404, detail="Pet not found.")
+
+    hidden = list(pet.hidden_loci_json or [])
+    if "Aura" not in hidden:
+        return ShopRevealOut(ok=True, gold=player.gold, revealed=False)
+
+    hidden.remove("Aura")
+    pet.hidden_loci_json = hidden
+    player.gold -= REVEAL_AURA_COST
+    db.commit()
+
+    return ShopRevealOut(ok=True, gold=player.gold, revealed=True)

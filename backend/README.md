@@ -14,6 +14,7 @@
 - `ADOPT_PREMIUM_RARE_CHANCE` to tune premium rare allele chance (default 0.25).
 - `ADOPT_PREMIUM_AURA_ACTIVE_CHANCE` to tune premium aura activation (default 0.7).
 - `ADOPT_PREMIUM_SHINY_CHANCE` to tune premium shiny chance (default 0.15).
+- `REVEAL_AURA_COST` to set hidden aura reveal cost (default 8).
 - `SELL_PRICE_COMMON`, `SELL_PRICE_UNCOMMON`, `SELL_PRICE_RARE`, `SELL_PRICE_EPIC`, `SELL_PRICE_LEGENDARY` to tune sell payouts.
 
 ## Setup
