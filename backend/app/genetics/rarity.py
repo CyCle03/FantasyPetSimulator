@@ -41,8 +41,6 @@ def rarity_profile(phenotype: dict) -> tuple[int, str, list[str]]:
 
     if element_value and element_value != "None":
         tags.append("ELEMENT_ACTIVE")
-        if aura_value and aura_value != "None":
-            tags.append("SYNERGY_EPIC_1")
 
     for locus, rare_values in RARE_BY_LOCUS.items():
         if phenotype.get(locus) in rare_values:
@@ -87,7 +85,7 @@ def rarity_score(phenotype: dict) -> int:
 def rarity_tier(score: int) -> str:
     if score >= 55:
         return "Legendary"
-    if score >= 35:
+    if score >= 40:
         return "Epic"
     if score >= 20:
         return "Rare"
