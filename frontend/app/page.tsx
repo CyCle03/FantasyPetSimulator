@@ -929,6 +929,101 @@ export default function Home() {
                 {text.ui.showMore}
               </button>
             ) : null}
+
+            <section className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="text-2xl font-semibold">{text.myEggs}</h2>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    className="rounded-full border border-ink/20 bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-ink/10 disabled:cursor-not-allowed disabled:opacity-60"
+                    onClick={handleHatchAll}
+                    disabled={busy || readyEggs.length === 0}
+                  >
+                    {text.ui.hatchAll} ({readyEggs.length})
+                  </button>
+                  <button
+                    className="rounded-full border border-ink/20 bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-ink/10"
+                    onClick={handleReset}
+                    disabled={busy}
+                  >
+                    {text.resetDb}
+                  </button>
+                </div>
+              </div>
+              {toast ? (
+                <div className="mt-3 inline-flex items-center rounded-full border border-moss/30 bg-white/90 px-4 py-1 text-xs font-semibold text-moss">
+                  {toast}
+                </div>
+              ) : null}
+              {lastHatchPet ? (
+                <div className="mt-4 rounded-2xl border border-ink/10 bg-white/80 p-4 text-sm text-ink/80 shadow-sm">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.2em] text-ink/50">
+                        {text.ui.hatchSummaryTitle}
+                      </p>
+                      <p className="mt-1 font-semibold">
+                        {(lastHatchPet.phenotype_public ?? lastHatchPet.phenotype).Species} ·{" "}
+                        {lastHatchPet.rarity_tier}
+                      </p>
+                    </div>
+                    <button
+                      className="rounded-full border border-ink/20 px-2 py-1 text-xs font-semibold text-ink/60"
+                      onClick={() => setLastHatchPet(null)}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <p className="mt-2 text-xs text-ink/70">
+                    {text.ui.hatchSummaryTags}:{" "}
+                    {(lastHatchPet.rarity_tags || []).slice(0, 4).join(", ") || "-"}
+                  </p>
+                </div>
+              ) : null}
+              <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {incubatingEggs.map((egg) => (
+                  <EggCard
+                    key={egg.id}
+                    egg={egg}
+                    now={now}
+                    onHatch={handleHatch}
+                    highlight={egg.id === highlightEggId}
+                    labels={text.eggCard}
+                  />
+                ))}
+              </div>
+            </section>
+
+            <section className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="text-2xl font-semibold">{text.hatchedEggs}</h2>
+              </div>
+              <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {hatchedEggs.length === 0 ? (
+                  <p className="text-sm text-ink/60">
+                    {lang === "ko" ? "부화 완료 알이 없습니다." : "No hatched eggs yet."}
+                  </p>
+                ) : (
+                  hatchedToShow.map((egg) => (
+                    <EggCard
+                      key={egg.id}
+                      egg={egg}
+                      now={now}
+                      onHatch={handleHatch}
+                      labels={text.eggCard}
+                    />
+                  ))
+                )}
+              </div>
+              {hatchedEggs.length > visibleHatched ? (
+                <button
+                  className="mt-4 rounded-full border border-ink/20 bg-white px-4 py-2 text-sm font-semibold text-ink hover:bg-ink/10"
+                  onClick={() => setVisibleHatched((count) => count + 6)}
+                >
+                  {text.ui.showMore}
+                </button>
+              ) : null}
+            </section>
           </div>
 
           <div className="space-y-6">
@@ -1032,101 +1127,6 @@ export default function Home() {
               labels={text.shop}
             />
           </div>
-        </section>
-
-        <section className="mt-10">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-2xl font-semibold">{text.myEggs}</h2>
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                className="rounded-full border border-ink/20 bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-ink/10 disabled:cursor-not-allowed disabled:opacity-60"
-                onClick={handleHatchAll}
-                disabled={busy || readyEggs.length === 0}
-              >
-                {text.ui.hatchAll} ({readyEggs.length})
-              </button>
-              <button
-                className="rounded-full border border-ink/20 bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-ink/10"
-                onClick={handleReset}
-                disabled={busy}
-              >
-                {text.resetDb}
-              </button>
-            </div>
-          </div>
-          {toast ? (
-            <div className="mt-3 inline-flex items-center rounded-full border border-moss/30 bg-white/90 px-4 py-1 text-xs font-semibold text-moss">
-              {toast}
-            </div>
-          ) : null}
-          {lastHatchPet ? (
-            <div className="mt-4 rounded-2xl border border-ink/10 bg-white/80 p-4 text-sm text-ink/80 shadow-sm">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-ink/50">
-                    {text.ui.hatchSummaryTitle}
-                  </p>
-                  <p className="mt-1 font-semibold">
-                    {(lastHatchPet.phenotype_public ?? lastHatchPet.phenotype).Species} ·{" "}
-                    {lastHatchPet.rarity_tier}
-                  </p>
-                </div>
-                <button
-                  className="rounded-full border border-ink/20 px-2 py-1 text-xs font-semibold text-ink/60"
-                  onClick={() => setLastHatchPet(null)}
-                >
-                  ✕
-                </button>
-              </div>
-              <p className="mt-2 text-xs text-ink/70">
-                {text.ui.hatchSummaryTags}:{" "}
-                {(lastHatchPet.rarity_tags || []).slice(0, 4).join(", ") || "-"}
-              </p>
-            </div>
-          ) : null}
-          <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {incubatingEggs.map((egg) => (
-              <EggCard
-                key={egg.id}
-                egg={egg}
-                now={now}
-                onHatch={handleHatch}
-                highlight={egg.id === highlightEggId}
-                labels={text.eggCard}
-              />
-            ))}
-          </div>
-        </section>
-
-        <section className="mt-10">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-2xl font-semibold">{text.hatchedEggs}</h2>
-          </div>
-          <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {hatchedEggs.length === 0 ? (
-              <p className="text-sm text-ink/60">
-                {lang === "ko" ? "부화 완료 알이 없습니다." : "No hatched eggs yet."}
-              </p>
-            ) : (
-              hatchedToShow.map((egg) => (
-                <EggCard
-                  key={egg.id}
-                  egg={egg}
-                  now={now}
-                  onHatch={handleHatch}
-                  labels={text.eggCard}
-                />
-              ))
-            )}
-          </div>
-          {hatchedEggs.length > visibleHatched ? (
-            <button
-              className="mt-4 rounded-full border border-ink/20 bg-white px-4 py-2 text-sm font-semibold text-ink hover:bg-ink/10"
-              onClick={() => setVisibleHatched((count) => count + 6)}
-            >
-              {text.ui.showMore}
-            </button>
-          ) : null}
         </section>
 
         <section className="mt-10">
